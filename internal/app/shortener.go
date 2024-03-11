@@ -70,7 +70,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		cur++
 		storage[cur] = link
 
-		result = fmt.Sprintf("http://localhost:8080/%s\n", base62.EncodeToString([]byte(strconv.Itoa(cur))))
+		result = fmt.Sprintf("http://localhost:8080/%s", base62.EncodeToString([]byte(strconv.Itoa(cur))))
 		code = http.StatusCreated
 	}
 }
