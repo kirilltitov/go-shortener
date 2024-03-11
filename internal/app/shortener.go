@@ -23,7 +23,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
 
 	defer func() {
-		fmt.Printf("Returning code %d with text %s", code, result)
+		fmt.Printf("Returning code %d with text %s\n", code, result)
 		w.WriteHeader(code)
 		io.WriteString(w, result)
 	}()
@@ -53,8 +53,6 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		code = http.StatusTemporaryRedirect
 
 		http.Redirect(w, r, url, code)
-
-		break
 	case http.MethodPost:
 		b, err := io.ReadAll(r.Body)
 		if err != nil {
@@ -74,7 +72,5 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 
 		result = fmt.Sprintf("http://localhost:8080/%s\n", base62.EncodeToString([]byte(strconv.Itoa(cur))))
 		code = http.StatusCreated
-
-		break
 	}
 }
