@@ -13,7 +13,7 @@ var cur int = 0
 var storage = map[int]string{}
 
 func isValidLink(maybeLink string) bool {
-	return strings.HasPrefix(maybeLink, "https://")
+	return strings.HasPrefix(maybeLink, "https://") || strings.HasPrefix(maybeLink, "http://")
 }
 
 func Handler(w http.ResponseWriter, r *http.Request) {
