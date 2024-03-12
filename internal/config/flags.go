@@ -7,12 +7,12 @@ import (
 
 const defaultPort = 8080
 
-var Bind string
-var BaseURL string
+var flagBind string
+var flagBaseURL string
 
-func ParseFlags() {
-	flag.StringVar(&Bind, "a", fmt.Sprintf(":%d", defaultPort), "Host and port to bind")
-	flag.StringVar(&BaseURL, "b", fmt.Sprintf("http://localhost:%d", defaultPort), "Base URL")
+func parseFlags() {
+	flag.StringVar(&flagBind, "a", fmt.Sprintf(":%d", defaultPort), "Host and port to bind")
+	flag.StringVar(&flagBaseURL, "b", fmt.Sprintf("http://localhost:%d", defaultPort), "Base URL")
 
 	flag.Parse()
 }

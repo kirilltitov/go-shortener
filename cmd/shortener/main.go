@@ -31,7 +31,7 @@ func main() {
 }
 
 func run() error {
-	config.ParseFlags()
+	config.Parse()
 
-	return http.ListenAndServe(config.Bind, ShortenerRouter())
+	return http.ListenAndServe(config.GetServerAddress(), ShortenerRouter())
 }

@@ -28,7 +28,7 @@ func TestHandlerCreateShortURL(t *testing.T) {
 			input: "http://ya.ru",
 			want: want{
 				code:     201,
-				response: fmt.Sprintf("%s/xA", config.BaseURL),
+				response: fmt.Sprintf("%s/xA", config.GetBaseURL()),
 			},
 		},
 		{
@@ -36,7 +36,7 @@ func TestHandlerCreateShortURL(t *testing.T) {
 			input: "https://ya.ru",
 			want: want{
 				code:     201,
-				response: fmt.Sprintf("%s/yA", config.BaseURL),
+				response: fmt.Sprintf("%s/yA", config.GetBaseURL()),
 			},
 		},
 		{

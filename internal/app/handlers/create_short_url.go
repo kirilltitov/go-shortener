@@ -30,5 +30,5 @@ func HandlerCreateShortURL(w http.ResponseWriter, r *http.Request, storage inter
 	storage.Set(*cur, link)
 
 	w.WriteHeader(http.StatusCreated)
-	io.WriteString(w, fmt.Sprintf("%s/%s", config.BaseURL, base62.EncodeToString([]byte(strconv.Itoa(*cur)))))
+	io.WriteString(w, fmt.Sprintf("%s/%s", config.GetBaseURL(), base62.EncodeToString([]byte(strconv.Itoa(*cur)))))
 }
