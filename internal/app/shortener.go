@@ -23,7 +23,6 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
 
 	defer func() {
-		fmt.Printf("Returning code %d with text %s\n", code, result)
 		w.WriteHeader(code)
 		io.WriteString(w, result)
 	}()
