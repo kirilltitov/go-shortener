@@ -3,6 +3,7 @@ package handlers
 import (
 	"fmt"
 	"github.com/jxskiss/base62"
+	"github.com/kirilltitov/go-shortener/internal/config"
 	internalStorage "github.com/kirilltitov/go-shortener/internal/storage"
 	"github.com/kirilltitov/go-shortener/internal/utils"
 	"io"
@@ -29,5 +30,5 @@ func HandlerCreateShortURL(w http.ResponseWriter, r *http.Request, storage inter
 	storage.Set(*cur, link)
 
 	w.WriteHeader(http.StatusCreated)
-	io.WriteString(w, fmt.Sprintf("http://localhost:8080/%s", base62.EncodeToString([]byte(strconv.Itoa(*cur)))))
+	io.WriteString(w, fmt.Sprintf("%s/%s", config.BaseURL, base62.EncodeToString([]byte(strconv.Itoa(*cur)))))
 }

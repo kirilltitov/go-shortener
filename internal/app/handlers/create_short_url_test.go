@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"fmt"
+	"github.com/kirilltitov/go-shortener/internal/config"
 	storage2 "github.com/kirilltitov/go-shortener/internal/storage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -26,7 +28,7 @@ func TestHandlerCreateShortURL(t *testing.T) {
 			input: "http://ya.ru",
 			want: want{
 				code:     201,
-				response: "http://localhost:8080/xA",
+				response: fmt.Sprintf("%s/xA", config.BaseURL),
 			},
 		},
 		{
@@ -34,7 +36,7 @@ func TestHandlerCreateShortURL(t *testing.T) {
 			input: "https://ya.ru",
 			want: want{
 				code:     201,
-				response: "http://localhost:8080/yA",
+				response: fmt.Sprintf("%s/yA", config.BaseURL),
 			},
 		},
 		{

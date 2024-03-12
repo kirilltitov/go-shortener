@@ -3,8 +3,8 @@ package main
 import (
 	"github.com/go-chi/chi/v5"
 	"github.com/kirilltitov/go-shortener/internal/app/handlers"
+	"github.com/kirilltitov/go-shortener/internal/config"
 	internalStorage "github.com/kirilltitov/go-shortener/internal/storage"
-	"log"
 	"net/http"
 )
 
@@ -25,5 +25,13 @@ func ShortenerRouter() chi.Router {
 }
 
 func main() {
-	log.Fatal(http.ListenAndServe(":8080", ShortenerRouter()))
+	if err := run(); err != nil {
+		panic(err)
+	}
+}
+
+func run() error {
+	config.ParseFlags()
+
+	return http.ListenAndServe(config.Bind, ShortenerRouter())
 }
