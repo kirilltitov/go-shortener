@@ -58,6 +58,7 @@ func TestHandlerCreateShortURL(t *testing.T) {
 			HandlerCreateShortURL(w, r, storage, &cur)
 
 			result := w.Result()
+			result.Cookies()
 			defer result.Body.Close()
 			resultBody, err := io.ReadAll(result.Body)
 			require.NoError(t, err)

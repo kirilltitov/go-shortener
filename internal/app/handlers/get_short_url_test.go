@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"context"
 	"fmt"
+	"github.com/go-chi/chi/v5"
 	storage2 "github.com/kirilltitov/go-shortener/internal/storage"
 	"github.com/stretchr/testify/assert"
 	"net/http"
@@ -41,6 +43,7 @@ func TestHandlerGetShortURL(t *testing.T) {
 
 	storage := storage2.InMemory{}
 	cur := 0
+
 	r := httptest.NewRequest(http.MethodPost, "/", strings.NewReader("https://ya.ru"))
 	w := httptest.NewRecorder()
 	HandlerCreateShortURL(w, r, storage, &cur)
@@ -49,6 +52,11 @@ func TestHandlerGetShortURL(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			r := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/%s", tt.input), nil)
 			w := httptest.NewRecorder()
+
+			rctx := chi.NewRouteContext()
+			rctx.URLParams.Add("short", tt.input)
+
+			r = r.WithContext(context.WithValue(r.Context(), chi.RouteCtxKey, rctx))
 
 			HandlerGetShortURL(w, r, storage)
 
