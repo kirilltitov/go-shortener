@@ -56,8 +56,8 @@ func TestHandlerCreateShortURL(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			HandlerCreateShortURL(w, r, storage, &cur)
-			result := w.Result()
 
+			result := w.Result()
 			defer result.Body.Close()
 			resultBody, err := io.ReadAll(result.Body)
 			require.NoError(t, err)

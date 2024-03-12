@@ -51,7 +51,9 @@ func TestHandlerGetShortURL(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			HandlerGetShortURL(w, r, storage)
+
 			result := w.Result()
+			defer result.Body.Close()
 
 			assert.Equal(t, tt.want.code, result.StatusCode)
 
