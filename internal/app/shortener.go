@@ -3,6 +3,7 @@ package internal
 import (
 	"fmt"
 	"github.com/jxskiss/base62"
+	internalStorage "github.com/kirilltitov/go-shortener/internal/storage"
 	"io"
 	"net/http"
 	"strconv"
@@ -10,7 +11,7 @@ import (
 )
 
 var cur int = 0
-var storage = map[int]string{}
+var storage internalStorage.Storage = internalStorage.InMemory{}
 
 func isValidLink(maybeLink string) bool {
 	return strings.HasPrefix(maybeLink, "https://") || strings.HasPrefix(maybeLink, "http://")
@@ -42,7 +43,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 			code = http.StatusBadRequest
 			break
 		}
-		url, ok := storage[decodedInt]
+		url, ok := storage.Get(decodedInt)
 		if !ok {
 			result = fmt.Sprintf("URL '%s' not found\n", shortURL)
 			code = http.StatusBadRequest
@@ -67,7 +68,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		cur++
-		storage[cur] = link
+		storage.Set(cur, link)
 
 		result = fmt.Sprintf("http://localhost:8080/%s", base62.EncodeToString([]byte(strconv.Itoa(cur))))
 		code = http.StatusCreated
