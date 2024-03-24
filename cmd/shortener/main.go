@@ -7,6 +7,7 @@ import (
 
 	"github.com/kirilltitov/go-shortener/internal/app/handlers"
 	"github.com/kirilltitov/go-shortener/internal/config"
+	"github.com/kirilltitov/go-shortener/internal/logger"
 	internalStorage "github.com/kirilltitov/go-shortener/internal/storage"
 )
 
@@ -16,12 +17,12 @@ var storage handlers.Storage = internalStorage.InMemory{}
 func ShortenerRouter() chi.Router {
 	router := chi.NewRouter()
 
-	router.Get("/{short}", func(w http.ResponseWriter, r *http.Request) {
+	router.Get("/{short}", logger.WithLogging(func(w http.ResponseWriter, r *http.Request) {
 		handlers.HandlerGetShortURL(w, r, storage)
-	})
-	router.Post("/", func(w http.ResponseWriter, r *http.Request) {
+	}))
+	router.Post("/", logger.WithLogging(func(w http.ResponseWriter, r *http.Request) {
 		handlers.HandlerCreateShortURL(w, r, storage, &cur)
-	})
+	}))
 
 	return router
 }
@@ -34,6 +35,8 @@ func main() {
 
 func run() error {
 	config.Parse()
+
+	logger.Log.Infof("Starting server at %s", config.GetServerAddress())
 
 	return http.ListenAndServe(config.GetServerAddress(), ShortenerRouter())
 }
