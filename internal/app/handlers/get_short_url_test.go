@@ -3,13 +3,15 @@ package handlers
 import (
 	"context"
 	"fmt"
-	"github.com/go-chi/chi/v5"
-	storage2 "github.com/kirilltitov/go-shortener/internal/storage"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/go-chi/chi/v5"
+
+	internalStorage "github.com/kirilltitov/go-shortener/internal/storage"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestHandlerGetShortURL(t *testing.T) {
@@ -41,7 +43,7 @@ func TestHandlerGetShortURL(t *testing.T) {
 		},
 	}
 
-	storage := storage2.InMemory{}
+	storage := internalStorage.InMemory{}
 	cur := 0
 
 	r := httptest.NewRequest(http.MethodPost, "/", strings.NewReader("https://ya.ru"))

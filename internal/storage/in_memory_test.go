@@ -1,13 +1,14 @@
 package storage
 
 import (
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestInMemory(t *testing.T) {
-	var storage Storage = InMemory{}
+	storage := InMemory{}
 
 	storage.Set(1337, "foo")
 

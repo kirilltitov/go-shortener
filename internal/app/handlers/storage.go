@@ -1,4 +1,4 @@
-package storage
+package handlers
 
 type Storage interface {
 	Get(int) (string, bool)

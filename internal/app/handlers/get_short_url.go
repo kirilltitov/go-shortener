@@ -2,15 +2,15 @@ package handlers
 
 import (
 	"fmt"
-	"github.com/go-chi/chi/v5"
-	"github.com/jxskiss/base62"
-	internalStorage "github.com/kirilltitov/go-shortener/internal/storage"
 	"io"
 	"net/http"
 	"strconv"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/jxskiss/base62"
 )
 
-func HandlerGetShortURL(w http.ResponseWriter, r *http.Request, storage internalStorage.Storage) {
+func HandlerGetShortURL(w http.ResponseWriter, r *http.Request, storage Storage) {
 	shortURL := chi.URLParam(r, "short")
 	decodedStringInt, err := base62.DecodeString(shortURL)
 	if err != nil {

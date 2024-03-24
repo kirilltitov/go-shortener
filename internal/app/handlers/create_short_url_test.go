@@ -2,15 +2,16 @@ package handlers
 
 import (
 	"fmt"
-	"github.com/kirilltitov/go-shortener/internal/config"
-	storage2 "github.com/kirilltitov/go-shortener/internal/storage"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/kirilltitov/go-shortener/internal/config"
+	internalStorage "github.com/kirilltitov/go-shortener/internal/storage"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestHandlerCreateShortURL(t *testing.T) {
@@ -49,7 +50,7 @@ func TestHandlerCreateShortURL(t *testing.T) {
 		},
 	}
 
-	storage := storage2.InMemory{}
+	storage := internalStorage.InMemory{}
 	cur := 0
 
 	for _, tt := range tests {

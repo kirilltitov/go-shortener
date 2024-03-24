@@ -1,15 +1,17 @@
 package main
 
 import (
+	"net/http"
+
 	"github.com/go-chi/chi/v5"
+
 	"github.com/kirilltitov/go-shortener/internal/app/handlers"
 	"github.com/kirilltitov/go-shortener/internal/config"
 	internalStorage "github.com/kirilltitov/go-shortener/internal/storage"
-	"net/http"
 )
 
 var cur int = 0
-var storage internalStorage.Storage = internalStorage.InMemory{}
+var storage handlers.Storage = internalStorage.InMemory{}
 
 func ShortenerRouter() chi.Router {
 	router := chi.NewRouter()
