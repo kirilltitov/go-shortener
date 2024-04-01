@@ -16,12 +16,12 @@ import (
 func getShortURL(shortURL string, storage Storage) (string, error) {
 	decodedStringInt, err := base62.DecodeString(shortURL)
 	if err != nil {
-		return "", fmt.Errorf("Could not decode short url '%s'", shortURL)
+		return "", fmt.Errorf("could not decode short url '%s'", shortURL)
 	}
 
 	decodedInt, err := strconv.Atoi(string(decodedStringInt))
 	if err != nil {
-		return "", fmt.Errorf("Could not decode short url '%s'", shortURL)
+		return "", fmt.Errorf("could not decode short url '%s'", shortURL)
 	}
 
 	url, ok := storage.Get(decodedInt)

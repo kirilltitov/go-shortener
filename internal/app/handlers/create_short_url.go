@@ -17,7 +17,7 @@ import (
 
 func createShortURL(URL string, storage Storage, cur *int) (string, error) {
 	if !utils.IsValidURL(URL) {
-		return "", fmt.Errorf("Invalid URL (must start with https:// or http://): %s", URL)
+		return "", fmt.Errorf("invalid URL (must start with https:// or http://): %s", URL)
 	}
 
 	*cur++
