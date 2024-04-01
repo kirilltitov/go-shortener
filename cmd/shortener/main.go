@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/kirilltitov/go-shortener/internal/utils"
 
 	"github.com/kirilltitov/go-shortener/internal/app/handlers"
 	"github.com/kirilltitov/go-shortener/internal/config"
@@ -39,7 +40,7 @@ func run() error {
 
 	logger.Log.Infof("Starting server at %s", config.GetServerAddress())
 
-	return http.ListenAndServe(config.GetServerAddress(), ShortenerRouter())
+	return http.ListenAndServe(config.GetServerAddress(), utils.GzipHandle(ShortenerRouter()))
 }
 
 func main() {
