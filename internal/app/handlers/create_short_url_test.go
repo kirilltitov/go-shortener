@@ -47,7 +47,7 @@ func TestHandlerCreateShortURL(t *testing.T) {
 			input: "ya.ru",
 			want: want{
 				code:     400,
-				response: "Invalid URL (must start with https:// or http://): ya.ru\n",
+				response: "invalid URL (must start with https:// or http://): ya.ru\n",
 			},
 		},
 	}
