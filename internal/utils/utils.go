@@ -9,7 +9,7 @@ var allowedProtocols = map[string]bool{
 	"https": true,
 }
 
-func IsValidLink(maybeLink string) bool {
+func IsValidURL(maybeLink string) bool {
 	parsedURL, err := url.Parse(maybeLink)
 	_, protocolFound := allowedProtocols[parsedURL.Scheme]
 	return err == nil && protocolFound
