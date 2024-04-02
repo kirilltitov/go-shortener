@@ -20,15 +20,15 @@ func createShortURL(URL string, storage internalStorage.Storage, cur *int) (stri
 		return "", fmt.Errorf("invalid URL (must start with https:// or http://): %s", URL)
 	}
 
+	*cur++
+	storage.Set(*cur, URL)
+
 	shortURL := base62.EncodeToString([]byte(strconv.Itoa(*cur)))
 	fullShortURL := fmt.Sprintf("%s/%s", config.GetBaseURL(), shortURL)
 
 	if err := internalStorage.SaveRowToFile(config.GetFileStoragePath(), *cur, shortURL, URL); err != nil {
 		return "", nil
 	}
-
-	*cur++
-	storage.Set(*cur, URL)
 
 	return fullShortURL, nil
 }

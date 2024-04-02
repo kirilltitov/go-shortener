@@ -52,6 +52,7 @@ func TestHandlerCreateShortURL(t *testing.T) {
 		},
 	}
 
+	internalStorage.WipeFileStorage(config.GetFileStoragePath())
 	storage := internalStorage.InMemory{}
 	cur := 0
 
@@ -109,6 +110,7 @@ func TestAPIHandlerCreateShortURL(t *testing.T) {
 		},
 	}
 
+	internalStorage.WipeFileStorage(config.GetFileStoragePath())
 	storage := internalStorage.InMemory{}
 	cur := 0
 

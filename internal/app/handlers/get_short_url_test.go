@@ -12,6 +12,7 @@ import (
 	"testing"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/kirilltitov/go-shortener/internal/config"
 	"github.com/stretchr/testify/require"
 
 	internalStorage "github.com/kirilltitov/go-shortener/internal/storage"
@@ -47,6 +48,7 @@ func TestHandlerGetShortURL(t *testing.T) {
 		},
 	}
 
+	internalStorage.WipeFileStorage(config.GetFileStoragePath())
 	storage := internalStorage.InMemory{}
 	cur := 0
 
@@ -105,6 +107,7 @@ func TestAPIHandlerGetShortURL(t *testing.T) {
 		},
 	}
 
+	internalStorage.WipeFileStorage(config.GetFileStoragePath())
 	storage := internalStorage.InMemory{}
 	cur := 0
 
