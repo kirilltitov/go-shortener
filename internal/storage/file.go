@@ -16,7 +16,11 @@ type row struct {
 	OriginalURL string `json:"original_url"`
 }
 
-func LoadStorageFromFile(path string, s Storage, cur *int) {
+type setter interface {
+	Set(int, string)
+}
+
+func LoadStorageFromFile(path string, s setter, cur *int) {
 	file, err := os.OpenFile(path, os.O_RDONLY, 0444)
 	if err != nil {
 		logger.Log.Infof("No storage file '%s'", path)

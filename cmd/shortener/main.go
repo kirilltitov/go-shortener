@@ -13,7 +13,7 @@ import (
 )
 
 var cur int = 0
-var storage internalStorage.Storage = internalStorage.InMemory{}
+var storage handlers.Storage = internalStorage.InMemory{}
 
 func ShortenerRouter() chi.Router {
 	router := chi.NewRouter()

@@ -15,7 +15,7 @@ import (
 	"github.com/kirilltitov/go-shortener/internal/utils"
 )
 
-func createShortURL(URL string, storage internalStorage.Storage, cur *int) (string, error) {
+func createShortURL(URL string, storage Storage, cur *int) (string, error) {
 	if !utils.IsValidURL(URL) {
 		return "", fmt.Errorf("invalid URL (must start with https:// or http://): %s", URL)
 	}
@@ -33,7 +33,7 @@ func createShortURL(URL string, storage internalStorage.Storage, cur *int) (stri
 	return fullShortURL, nil
 }
 
-func HandlerCreateShortURL(w http.ResponseWriter, r *http.Request, storage internalStorage.Storage, cur *int) {
+func HandlerCreateShortURL(w http.ResponseWriter, r *http.Request, storage Storage, cur *int) {
 	b, err := io.ReadAll(r.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -53,7 +53,7 @@ func HandlerCreateShortURL(w http.ResponseWriter, r *http.Request, storage inter
 	io.WriteString(w, shortURL)
 }
 
-func APIHandlerCreateShortURL(w http.ResponseWriter, r *http.Request, storage internalStorage.Storage, cur *int) {
+func APIHandlerCreateShortURL(w http.ResponseWriter, r *http.Request, storage Storage, cur *int) {
 	w.Header().Set("Content-Type", "application/json")
 
 	log := logger.Log
