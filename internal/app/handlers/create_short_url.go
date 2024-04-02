@@ -9,24 +9,31 @@ import (
 	"strconv"
 
 	"github.com/jxskiss/base62"
-	"github.com/kirilltitov/go-shortener/internal/logger"
-
 	"github.com/kirilltitov/go-shortener/internal/config"
+	"github.com/kirilltitov/go-shortener/internal/logger"
+	internalStorage "github.com/kirilltitov/go-shortener/internal/storage"
 	"github.com/kirilltitov/go-shortener/internal/utils"
 )
 
-func createShortURL(URL string, storage Storage, cur *int) (string, error) {
+func createShortURL(URL string, storage internalStorage.Storage, cur *int) (string, error) {
 	if !utils.IsValidURL(URL) {
 		return "", fmt.Errorf("invalid URL (must start with https:// or http://): %s", URL)
+	}
+
+	shortURL := base62.EncodeToString([]byte(strconv.Itoa(*cur)))
+	fullShortURL := fmt.Sprintf("%s/%s", config.GetBaseURL(), shortURL)
+
+	if err := internalStorage.SaveRowToFile(config.GetFileStoragePath(), *cur, shortURL, URL); err != nil {
+		return "", nil
 	}
 
 	*cur++
 	storage.Set(*cur, URL)
 
-	return fmt.Sprintf("%s/%s", config.GetBaseURL(), base62.EncodeToString([]byte(strconv.Itoa(*cur)))), nil
+	return fullShortURL, nil
 }
 
-func HandlerCreateShortURL(w http.ResponseWriter, r *http.Request, storage Storage, cur *int) {
+func HandlerCreateShortURL(w http.ResponseWriter, r *http.Request, storage internalStorage.Storage, cur *int) {
 	b, err := io.ReadAll(r.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -46,7 +53,7 @@ func HandlerCreateShortURL(w http.ResponseWriter, r *http.Request, storage Stora
 	io.WriteString(w, shortURL)
 }
 
-func APIHandlerCreateShortURL(w http.ResponseWriter, r *http.Request, storage Storage, cur *int) {
+func APIHandlerCreateShortURL(w http.ResponseWriter, r *http.Request, storage internalStorage.Storage, cur *int) {
 	w.Header().Set("Content-Type", "application/json")
 
 	log := logger.Log
@@ -78,7 +85,6 @@ func APIHandlerCreateShortURL(w http.ResponseWriter, r *http.Request, storage St
 		panic(err)
 	}
 
-	log.Infof("req: %v, res: %v, bytes: %v", req, resp, responseBytes)
 	w.WriteHeader(http.StatusCreated)
 	w.Write(responseBytes)
 }

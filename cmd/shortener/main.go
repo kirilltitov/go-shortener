@@ -13,7 +13,7 @@ import (
 )
 
 var cur int = 0
-var storage handlers.Storage = internalStorage.InMemory{}
+var storage internalStorage.Storage = internalStorage.InMemory{}
 
 func ShortenerRouter() chi.Router {
 	router := chi.NewRouter()
@@ -37,6 +37,8 @@ func ShortenerRouter() chi.Router {
 
 func run() error {
 	config.Parse()
+
+	internalStorage.LoadStorageFromFile(config.GetFileStoragePath(), storage, &cur)
 
 	logger.Log.Infof("Starting server at %s", config.GetServerAddress())
 
