@@ -29,3 +29,14 @@ func GetBaseURL() string {
 
 	return result
 }
+
+func GetFileStoragePath() string {
+	var result = flagFileStoragePath
+
+	envFileStoragePath := os.Getenv("FILE_STORAGE_PATH")
+	if envFileStoragePath != "" {
+		result = envFileStoragePath
+	}
+
+	return result
+}
