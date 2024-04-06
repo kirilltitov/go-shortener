@@ -20,18 +20,12 @@ type setter interface {
 	Set(int, string)
 }
 
-func LoadStorageFromFile(path string, s setter, cur *int) {
+func LoadStorageFromFile(path string, s setter, cur *int) error {
 	file, err := os.OpenFile(path, os.O_RDONLY, 0444)
 	if err != nil {
 		logger.Log.Infof("No storage file '%s'", path)
-		return
+		return nil
 	}
-
-	defer func() {
-		if err := file.Close(); err != nil {
-			panic(err)
-		}
-	}()
 
 	decoder := json.NewDecoder(file)
 
@@ -47,6 +41,8 @@ func LoadStorageFromFile(path string, s setter, cur *int) {
 		s.Set(*cur, r.OriginalURL)
 		logger.Log.Infof("Loaded row %+v from file", r)
 	}
+
+	return file.Close()
 }
 
 func SaveRowToFile(path string, cur int, shortURL, URL string) error {
@@ -54,11 +50,6 @@ func SaveRowToFile(path string, cur int, shortURL, URL string) error {
 	if err != nil {
 		return err
 	}
-	defer func() {
-		if err := file.Close(); err != nil {
-			panic(err)
-		}
-	}()
 
 	encoder := json.NewEncoder(file)
 
@@ -70,7 +61,7 @@ func SaveRowToFile(path string, cur int, shortURL, URL string) error {
 		return err
 	}
 
-	return nil
+	return file.Close()
 }
 
 func WipeFileStorage(path string) {

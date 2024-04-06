@@ -38,7 +38,9 @@ func ShortenerRouter() chi.Router {
 func run() error {
 	config.Parse()
 
-	internalStorage.LoadStorageFromFile(config.GetFileStoragePath(), storage, &cur)
+	if err := internalStorage.LoadStorageFromFile(config.GetFileStoragePath(), storage, &cur); err != nil {
+		return err
+	}
 
 	logger.Log.Infof("Starting server at %s", config.GetServerAddress())
 
