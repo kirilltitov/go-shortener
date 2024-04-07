@@ -10,7 +10,7 @@ const defaultPort = 8080
 var flagBind = fmt.Sprintf(":%d", defaultPort)
 var flagBaseURL = fmt.Sprintf("http://localhost:%d", defaultPort)
 var flagFileStoragePath = "/tmp/short-url-db.json"
-var flagDatabaseDSN = "postgresql://postgres:mysecretpassword@127.0.0.1:5432/postgres"
+var flagDatabaseDSN = ""
 
 func parseFlags() {
 	flag.StringVar(&flagBind, "a", flagBind, "Host and port to bind")
