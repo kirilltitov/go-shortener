@@ -40,3 +40,14 @@ func GetFileStoragePath() string {
 
 	return result
 }
+
+func GetDatabaseDSN() string {
+	var result = flagDatabaseDSN
+
+	envDatabaseDSN := os.Getenv("DATABASE_DSN")
+	if envDatabaseDSN != "" {
+		result = envDatabaseDSN
+	}
+
+	return result
+}
