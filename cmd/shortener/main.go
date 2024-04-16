@@ -28,6 +28,9 @@ func ShortenerRouter(a *app) chi.Router {
 	router.Post("/api/shorten", logger.WithLogging(func(w http.ResponseWriter, r *http.Request) {
 		handlers.APIHandlerCreateShortURL(w, r, a.Storage)
 	}))
+	router.Post("/api/shorten/batch", logger.WithLogging(func(w http.ResponseWriter, r *http.Request) {
+		handlers.APIHandlerBatchCreateShortURL(w, r, a.Storage)
+	}))
 
 	router.Get("/ping", logger.WithLogging(func(w http.ResponseWriter, r *http.Request) {
 		handlers.HandlerPing(w, r, ctx, a.Storage)

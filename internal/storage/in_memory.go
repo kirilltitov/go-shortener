@@ -2,36 +2,57 @@ package storage
 
 import "context"
 
+type inMemoryRow struct {
+	cur int
+	URL string
+}
+
 type InMemory struct {
-	s   map[int]string
-	cur *int
+	storage map[string]inMemoryRow
+	cur     *int
 }
 
 func NewInMemoryStorage(ctx context.Context) *InMemory {
 	return &InMemory{
-		s:   make(map[int]string),
-		cur: new(int),
+		storage: make(map[string]inMemoryRow),
+		cur:     new(int),
 	}
 }
 
 func (s InMemory) Get(ctx context.Context, shortURL string) (string, error) {
-	i, err := shortURLToInt(shortURL)
-	if err != nil {
-		return "", err
-	}
-
 	var _err error = nil
-	val, ok := s.s[i]
+	val, ok := s.storage[shortURL]
 	if !ok {
 		_err = ErrNotFound
 	}
 
-	return val, _err
+	return val.URL, _err
 }
 
 func (s InMemory) Set(ctx context.Context, URL string) (string, error) {
 	*s.cur++
-	s.s[*s.cur] = URL
+	shortURL := intToShortURL(*s.cur)
+	s.storage[shortURL] = inMemoryRow{
+		cur: *s.cur,
+		URL: URL,
+	}
 
-	return intToShortURL(*s.cur), nil
+	return shortURL, nil
+}
+
+func (s InMemory) MultiSet(ctx context.Context, items Items) (Items, error) {
+	var result Items
+
+	for _, item := range items {
+		shortURL, err := s.Set(ctx, item.URL)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, Item{
+			UUID: item.UUID,
+			URL:  shortURL,
+		})
+	}
+
+	return result, nil
 }

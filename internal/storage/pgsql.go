@@ -54,25 +54,42 @@ func (p PgSQL) Set(ctx context.Context, URL string) (string, error) {
 	}
 	defer tx.Rollback(ctx)
 
-	var cur int
-	if err := pgxscan.Get(ctx, tx, &cur, `
-	insert into public.url (short_url, url) values ($1, $2) returning id
-	`, "", URL); err != nil {
-		return "", err
-	}
-
-	shortURL := intToShortURL(cur)
-
-	if _, err := tx.Exec(ctx, `update public.url set short_url = $1 where id = $2`, shortURL, cur); err != nil {
-		return "", err
-	}
-
-	err = tx.Commit(ctx)
+	shortURL, err := txInsert(ctx, tx, URL)
 	if err != nil {
+		return "", err
+	}
+	if err := tx.Commit(ctx); err != nil {
 		return "", err
 	}
 
 	return shortURL, nil
+}
+
+func (p PgSQL) MultiSet(ctx context.Context, items Items) (Items, error) {
+	tx, err := p.C.Begin(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback(ctx)
+
+	var result Items
+	for _, item := range items {
+		shortURL, err := txInsert(ctx, tx, item.URL)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, Item{
+			UUID: item.UUID,
+			URL:  shortURL,
+		})
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 // я не смог разобраться с Goose за приемлемое время :(
@@ -88,4 +105,21 @@ func (p PgSQL) MigrateUp(ctx context.Context) error {
 	`)
 
 	return err
+}
+
+func txInsert(ctx context.Context, tx pgx.Tx, URL string) (string, error) {
+	var cur int
+	if err := pgxscan.Get(ctx, tx, &cur, `
+		insert into public.url (short_url, url) values ($1, $2) returning id
+		`, "", URL); err != nil {
+		return "", err
+	}
+
+	shortURL := intToShortURL(cur)
+
+	if _, err := tx.Exec(ctx, `update public.url set short_url = $1 where id = $2`, shortURL, cur); err != nil {
+		return "", err
+	}
+
+	return shortURL, nil
 }

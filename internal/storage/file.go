@@ -41,11 +41,28 @@ func (f *File) Set(ctx context.Context, URL string) (string, error) {
 		return "", err
 	}
 
-	if err := f.saveRowToFile(shortURL, URL); err != nil {
+	if err := f.saveRowToFile(*f.cur, shortURL, URL); err != nil {
 		return "", err
 	}
 
 	return shortURL, nil
+}
+
+func (f *File) MultiSet(ctx context.Context, items Items) (Items, error) {
+	var result Items
+
+	for _, item := range items {
+		shortURL, err := f.Set(ctx, item.URL)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, Item{
+			UUID: item.UUID,
+			URL:  shortURL,
+		})
+	}
+
+	return result, nil
 }
 
 func (f *File) LoadStorageFromFile(ctx context.Context) error {
@@ -74,7 +91,7 @@ func (f *File) LoadStorageFromFile(ctx context.Context) error {
 	return file.Close()
 }
 
-func (f *File) saveRowToFile(shortURL, URL string) error {
+func (f *File) saveRowToFile(idx int, shortURL, URL string) error {
 	file, err := os.OpenFile(f.path, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		return err
@@ -83,7 +100,7 @@ func (f *File) saveRowToFile(shortURL, URL string) error {
 	encoder := json.NewEncoder(file)
 
 	if err := encoder.Encode(fileRow{
-		UUID:        strconv.Itoa(*f.cur),
+		UUID:        strconv.Itoa(idx),
 		ShortURL:    shortURL,
 		OriginalURL: URL,
 	}); err != nil {
