@@ -2,38 +2,31 @@ package handlers
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
-	"strconv"
 
-	"github.com/jxskiss/base62"
 	"github.com/kirilltitov/go-shortener/internal/config"
 	"github.com/kirilltitov/go-shortener/internal/logger"
-	internalStorage "github.com/kirilltitov/go-shortener/internal/storage"
 	"github.com/kirilltitov/go-shortener/internal/utils"
 )
 
-func createShortURL(URL string, storage Storage, cur *int) (string, error) {
+func createShortURL(ctx context.Context, URL string, storage Storage) (string, error) {
 	if !utils.IsValidURL(URL) {
 		return "", fmt.Errorf("invalid URL (must start with https:// or http://): %s", URL)
 	}
 
-	*cur++
-	storage.Set(*cur, URL)
-
-	shortURL := base62.EncodeToString([]byte(strconv.Itoa(*cur)))
-	fullShortURL := fmt.Sprintf("%s/%s", config.GetBaseURL(), shortURL)
-
-	if err := internalStorage.SaveRowToFile(config.GetFileStoragePath(), *cur, shortURL, URL); err != nil {
-		return "", nil
+	shortURL, err := storage.Set(ctx, URL)
+	if err != nil {
+		return "", err
 	}
 
-	return fullShortURL, nil
+	return fmt.Sprintf("%s/%s", config.GetBaseURL(), shortURL), nil
 }
 
-func HandlerCreateShortURL(w http.ResponseWriter, r *http.Request, storage Storage, cur *int) {
+func HandlerCreateShortURL(w http.ResponseWriter, r *http.Request, storage Storage) {
 	b, err := io.ReadAll(r.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -42,7 +35,7 @@ func HandlerCreateShortURL(w http.ResponseWriter, r *http.Request, storage Stora
 	}
 
 	URL := string(b)
-	shortURL, err := createShortURL(URL, storage, cur)
+	shortURL, err := createShortURL(r.Context(), URL, storage)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		io.WriteString(w, fmt.Sprintf("%s\n", err.Error()))
@@ -53,7 +46,7 @@ func HandlerCreateShortURL(w http.ResponseWriter, r *http.Request, storage Stora
 	io.WriteString(w, shortURL)
 }
 
-func APIHandlerCreateShortURL(w http.ResponseWriter, r *http.Request, storage Storage, cur *int) {
+func APIHandlerCreateShortURL(w http.ResponseWriter, r *http.Request, storage Storage) {
 	w.Header().Set("Content-Type", "application/json")
 
 	log := logger.Log
@@ -72,7 +65,7 @@ func APIHandlerCreateShortURL(w http.ResponseWriter, r *http.Request, storage St
 		return
 	}
 
-	shortURL, err := createShortURL(req.URL, storage, cur)
+	shortURL, err := createShortURL(r.Context(), req.URL, storage)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		log.Info(err.Error())

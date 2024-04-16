@@ -1,6 +1,8 @@
 package handlers
 
+import "context"
+
 type Storage interface {
-	Get(int) (string, bool)
-	Set(int, string)
+	Get(ctx context.Context, shortURL string) (string, error)
+	Set(ctx context.Context, URL string) (string, error)
 }

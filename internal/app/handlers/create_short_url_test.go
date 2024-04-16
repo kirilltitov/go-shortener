@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -52,16 +53,14 @@ func TestHandlerCreateShortURL(t *testing.T) {
 		},
 	}
 
-	internalStorage.WipeFileStorage(config.GetFileStoragePath())
-	storage := internalStorage.InMemory{}
-	cur := 0
+	storage := internalStorage.NewInMemoryStorage(context.Background())
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(tt.input))
 			w := httptest.NewRecorder()
 
-			HandlerCreateShortURL(w, r, storage, &cur)
+			HandlerCreateShortURL(w, r, storage)
 
 			result := w.Result()
 			defer result.Body.Close()
@@ -110,9 +109,7 @@ func TestAPIHandlerCreateShortURL(t *testing.T) {
 		},
 	}
 
-	internalStorage.WipeFileStorage(config.GetFileStoragePath())
-	storage := internalStorage.InMemory{}
-	cur := 0
+	storage := internalStorage.NewInMemoryStorage(context.Background())
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -121,7 +118,7 @@ func TestAPIHandlerCreateShortURL(t *testing.T) {
 			r := httptest.NewRequest(http.MethodPost, "/api/shorten", bytes.NewReader(inputBytes))
 			w := httptest.NewRecorder()
 
-			APIHandlerCreateShortURL(w, r, storage, &cur)
+			APIHandlerCreateShortURL(w, r, storage)
 
 			result := w.Result()
 			defer result.Body.Close()

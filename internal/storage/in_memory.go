@@ -1,12 +1,37 @@
 package storage
 
-type InMemory map[int]string
+import "context"
 
-func (s InMemory) Get(key int) (string, bool) {
-	val, ok := s[key]
-	return val, ok
+type InMemory struct {
+	s   map[int]string
+	cur *int
 }
 
-func (s InMemory) Set(key int, value string) {
-	s[key] = value
+func NewInMemoryStorage(ctx context.Context) *InMemory {
+	return &InMemory{
+		s:   make(map[int]string),
+		cur: new(int),
+	}
+}
+
+func (s InMemory) Get(ctx context.Context, shortURL string) (string, error) {
+	i, err := shortURLToInt(shortURL)
+	if err != nil {
+		return "", err
+	}
+
+	var _err error = nil
+	val, ok := s.s[i]
+	if !ok {
+		_err = ErrNotFound
+	}
+
+	return val, _err
+}
+
+func (s InMemory) Set(ctx context.Context, URL string) (string, error) {
+	*s.cur++
+	s.s[*s.cur] = URL
+
+	return intToShortURL(*s.cur), nil
 }

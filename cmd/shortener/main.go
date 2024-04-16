@@ -5,37 +5,32 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/kirilltitov/go-shortener/internal/utils"
-
 	"github.com/kirilltitov/go-shortener/internal/app/handlers"
 	"github.com/kirilltitov/go-shortener/internal/config"
 	"github.com/kirilltitov/go-shortener/internal/logger"
-	internalStorage "github.com/kirilltitov/go-shortener/internal/storage"
+	"github.com/kirilltitov/go-shortener/internal/utils"
 )
-
-var cur int = 0
-var storage handlers.Storage = internalStorage.InMemory{}
 
 func ShortenerRouter(a *app) chi.Router {
 	router := chi.NewRouter()
 	ctx := context.Background()
 
 	router.Get("/{short}", logger.WithLogging(func(w http.ResponseWriter, r *http.Request) {
-		handlers.HandlerGetShortURL(w, r, storage)
+		handlers.HandlerGetShortURL(w, r, a.Storage)
 	}))
 	router.Post("/api/get", logger.WithLogging(func(w http.ResponseWriter, r *http.Request) {
-		handlers.APIHandlerGetShortURL(w, r, storage)
+		handlers.APIHandlerGetShortURL(w, r, a.Storage)
 	}))
 
 	router.Post("/", logger.WithLogging(func(w http.ResponseWriter, r *http.Request) {
-		handlers.HandlerCreateShortURL(w, r, storage, &cur)
+		handlers.HandlerCreateShortURL(w, r, a.Storage)
 	}))
 	router.Post("/api/shorten", logger.WithLogging(func(w http.ResponseWriter, r *http.Request) {
-		handlers.APIHandlerCreateShortURL(w, r, storage, &cur)
+		handlers.APIHandlerCreateShortURL(w, r, a.Storage)
 	}))
 
 	router.Get("/ping", logger.WithLogging(func(w http.ResponseWriter, r *http.Request) {
-		handlers.HandlerPing(w, r, ctx, a.DB)
+		handlers.HandlerPing(w, r, ctx, a.Storage)
 	}))
 
 	return router
@@ -44,12 +39,10 @@ func ShortenerRouter(a *app) chi.Router {
 func run() error {
 	config.Parse()
 
-	a, err := newApp(config.GetDatabaseDSN())
-	if err != nil {
-		return err
-	}
+	ctx := context.Background()
 
-	if err := internalStorage.LoadStorageFromFile(config.GetFileStoragePath(), storage, &cur); err != nil {
+	a, err := newApp(ctx, config.GetDatabaseDSN(), config.GetFileStoragePath())
+	if err != nil {
 		return err
 	}
 

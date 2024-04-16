@@ -4,17 +4,23 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/jackc/pgx/v5"
-
 	"github.com/kirilltitov/go-shortener/internal/logger"
+	"github.com/kirilltitov/go-shortener/internal/storage"
 )
 
-func HandlerPing(w http.ResponseWriter, r *http.Request, ctx context.Context, conn *pgx.Conn) {
-	err := conn.Ping(ctx)
+func HandlerPing(w http.ResponseWriter, r *http.Request, ctx context.Context, s Storage) {
 	code := 200
 
-	if err != nil {
-		logger.Log.Errorf("Could not ping PgSQL: %v\n", err)
+	switch v := s.(type) {
+	case storage.PgSQL:
+		err := v.C.Ping(ctx)
+
+		if err != nil {
+			logger.Log.Errorf("Could not ping PgSQL: %v\n", err)
+			code = 500
+		}
+	default:
+		logger.Log.Info("Storage is not PgSQL")
 		code = 500
 	}
 

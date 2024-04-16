@@ -2,38 +2,33 @@ package handlers
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
-	"strconv"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/jxskiss/base62"
 	"github.com/kirilltitov/go-shortener/internal/logger"
+	internalStorage "github.com/kirilltitov/go-shortener/internal/storage"
 )
 
-func getShortURL(shortURL string, storage Storage) (string, error) {
-	decodedStringInt, err := base62.DecodeString(shortURL)
+func getShortURL(ctx context.Context, shortURL string, storage Storage) (string, error) {
+	url, err := storage.Get(ctx, shortURL)
 	if err != nil {
-		return "", fmt.Errorf("could not decode short url '%s'", shortURL)
-	}
-
-	decodedInt, err := strconv.Atoi(string(decodedStringInt))
-	if err != nil {
-		return "", fmt.Errorf("could not decode short url '%s'", shortURL)
-	}
-
-	url, ok := storage.Get(decodedInt)
-	if !ok {
-		return "", fmt.Errorf("URL '%s' not found", shortURL)
+		if errors.Is(err, internalStorage.ErrNotFound) {
+			return "", fmt.Errorf("URL '%s' not found", shortURL)
+		} else {
+			return "", err
+		}
 	}
 
 	return url, nil
 }
 
 func HandlerGetShortURL(w http.ResponseWriter, r *http.Request, storage Storage) {
-	result, err := getShortURL(chi.URLParam(r, "short"), storage)
+	result, err := getShortURL(r.Context(), chi.URLParam(r, "short"), storage)
 
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -63,7 +58,7 @@ func APIHandlerGetShortURL(w http.ResponseWriter, r *http.Request, storage Stora
 		return
 	}
 
-	result, err := getShortURL(req.URL, storage)
+	result, err := getShortURL(r.Context(), req.URL, storage)
 
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)

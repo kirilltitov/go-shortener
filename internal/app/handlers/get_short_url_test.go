@@ -12,7 +12,6 @@ import (
 	"testing"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/kirilltitov/go-shortener/internal/config"
 	"github.com/stretchr/testify/require"
 
 	internalStorage "github.com/kirilltitov/go-shortener/internal/storage"
@@ -48,13 +47,11 @@ func TestHandlerGetShortURL(t *testing.T) {
 		},
 	}
 
-	internalStorage.WipeFileStorage(config.GetFileStoragePath())
-	storage := internalStorage.InMemory{}
-	cur := 0
+	storage := internalStorage.NewInMemoryStorage(context.Background())
 
 	r := httptest.NewRequest(http.MethodPost, "/", strings.NewReader("https://ya.ru"))
 	w := httptest.NewRecorder()
-	HandlerCreateShortURL(w, r, storage, &cur)
+	HandlerCreateShortURL(w, r, storage)
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -107,13 +104,11 @@ func TestAPIHandlerGetShortURL(t *testing.T) {
 		},
 	}
 
-	internalStorage.WipeFileStorage(config.GetFileStoragePath())
-	storage := internalStorage.InMemory{}
-	cur := 0
+	storage := internalStorage.NewInMemoryStorage(context.Background())
 
 	r := httptest.NewRequest(http.MethodPost, "/", strings.NewReader("https://ya.ru"))
 	w := httptest.NewRecorder()
-	HandlerCreateShortURL(w, r, storage, &cur)
+	HandlerCreateShortURL(w, r, storage)
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
