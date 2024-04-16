@@ -71,6 +71,6 @@ func APIHandlerBatchCreateShortURL(w http.ResponseWriter, r *http.Request, stora
 		panic(err)
 	}
 
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(http.StatusOK)
 	w.Write(responseBytes)
 }
