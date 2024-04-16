@@ -22,6 +22,8 @@ type batchResponseRow struct {
 }
 
 func APIHandlerBatchCreateShortURL(w http.ResponseWriter, r *http.Request, storage Storage) {
+	w.Header().Set("Content-Type", "application/json")
+
 	log := logger.Log
 
 	var b batchRequest
