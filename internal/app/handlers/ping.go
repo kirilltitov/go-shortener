@@ -12,7 +12,7 @@ func HandlerPing(w http.ResponseWriter, r *http.Request, ctx context.Context, s 
 	code := 200
 
 	switch v := s.(type) {
-	case storage.PgSQL:
+	case *storage.PgSQL:
 		err := v.C.Ping(ctx)
 
 		if err != nil {
