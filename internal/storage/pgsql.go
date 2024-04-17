@@ -28,10 +28,11 @@ func NewPgSQLStorage(ctx context.Context, DSN string) (*PgSQL, error) {
 }
 
 type DBRow struct {
-	ID        int       `db:"id"`
-	ShortURL  string    `db:"short_url"`
-	URL       string    `db:"url"`
-	CreatedAt time.Time `db:"created_at"`
+	ID         int       `db:"id"`
+	ShortURL   string    `db:"short_url"`
+	URL        string    `db:"url"`
+	Duplicates int       `db:"duplicates"`
+	CreatedAt  time.Time `db:"created_at"`
 }
 
 func (p PgSQL) Get(ctx context.Context, shortURL string) (string, error) {
