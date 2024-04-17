@@ -23,7 +23,11 @@ func createShortURL(ctx context.Context, URL string, storage Storage) (string, e
 		return "", err
 	}
 
-	return fmt.Sprintf("%s/%s", config.GetBaseURL(), shortURL), nil
+	return formatShortURL(shortURL), nil
+}
+
+func formatShortURL(shortURL string) string {
+	return fmt.Sprintf("%s/%s", config.GetBaseURL(), shortURL)
 }
 
 func HandlerCreateShortURL(w http.ResponseWriter, r *http.Request, storage Storage) {

@@ -62,7 +62,7 @@ func APIHandlerBatchCreateShortURL(w http.ResponseWriter, r *http.Request, stora
 	for _, item := range result {
 		response = append(response, batchResponseRow{
 			CorrelationID: item.UUID,
-			ShortURL:      item.URL,
+			ShortURL:      formatShortURL(item.URL),
 		})
 	}
 

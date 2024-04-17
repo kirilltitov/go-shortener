@@ -76,7 +76,7 @@ func (f *File) LoadStorageFromFile(ctx context.Context) error {
 
 	for {
 		var r fileRow
-		if err := decoder.Decode(&r); err == io.EOF {
+		if err := decoder.Decode(&r); errors.Is(err, io.EOF) {
 			break
 		} else if err != nil {
 			logger.Log.Fatal(err)
