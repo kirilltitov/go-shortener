@@ -102,6 +102,7 @@ func (p PgSQL) MigrateUp(ctx context.Context) error {
 			id         serial primary key,
 			short_url  varchar not null,
 			url        varchar not null constraint url_pk unique,
+			duplicates int not null default 0,
 			created_at timestamp default CURRENT_TIMESTAMP not null
 		)
 	`); err != nil {
