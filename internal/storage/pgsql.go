@@ -94,31 +94,46 @@ func (p PgSQL) MultiSet(ctx context.Context, items Items) (Items, error) {
 
 // я не смог разобраться с Goose за приемлемое время :(
 func (p PgSQL) MigrateUp(ctx context.Context) error {
-	_, err := p.C.Exec(ctx, `
-	create table if not exists url
-	(
-		id         serial primary key,
-		short_url  varchar                             not null,
-		url        varchar                             not null,
-		created_at timestamp default CURRENT_TIMESTAMP not null
-	)
-	`)
+	if _, err := p.C.Exec(ctx, `
+		create table if not exists url
+		(
+			id         serial primary key,
+			short_url  varchar not null,
+			url        varchar not null constraint url_pk unique,
+			created_at timestamp default CURRENT_TIMESTAMP not null
+		)
+	`); err != nil {
+		return err
+	}
 
-	return err
+	return nil
 }
 
 func txInsert(ctx context.Context, tx pgx.Tx, URL string) (string, error) {
-	var cur int
-	if err := pgxscan.Get(ctx, tx, &cur, `
-		insert into public.url (short_url, url) values ($1, $2) returning id
+	var inserted struct {
+		Cur        int    `db:"id"`
+		ShortURL   string `db:"short_url"`
+		Duplicates int    `db:"duplicates"`
+	}
+	if err := pgxscan.Get(ctx, tx, &inserted, `
+		insert into public.url (short_url, url) values ($1, $2)
+		on conflict on constraint url_pk do update set duplicates = url.duplicates + 1 returning id, short_url, duplicates
 		`, "", URL); err != nil {
+		logger.Log.Infof("Could not insert new row: %+v", err)
 		return "", err
 	}
 
-	shortURL := intToShortURL(cur)
-
-	if _, err := tx.Exec(ctx, `update public.url set short_url = $1 where id = $2`, shortURL, cur); err != nil {
-		return "", err
+	var shortURL string
+	if inserted.ShortURL != "" {
+		shortURL = inserted.ShortURL
+		logger.Log.Infof(
+			"Found duplicate for URL '%s', returning pre-existing short URL '%s' (this is %dth duplicate)",
+			URL, shortURL, inserted.Duplicates)
+	} else {
+		shortURL = intToShortURL(inserted.Cur)
+		if _, err := tx.Exec(ctx, `update public.url set short_url = $1 where id = $2`, shortURL, inserted.Cur); err != nil {
+			return "", err
+		}
 	}
 
 	return shortURL, nil
