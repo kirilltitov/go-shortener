@@ -41,7 +41,7 @@ func HandlerCreateShortURL(w http.ResponseWriter, r *http.Request, storage Stora
 	URL := string(b)
 	shortURL, err := createShortURL(r.Context(), URL, storage)
 	if err != nil {
-		if errors.Is(err, internalStorage.DuplicateErr) {
+		if errors.Is(err, internalStorage.ErrDuplicate) {
 			code = http.StatusConflict
 		} else {
 			w.WriteHeader(http.StatusBadRequest)
@@ -76,7 +76,7 @@ func APIHandlerCreateShortURL(w http.ResponseWriter, r *http.Request, storage St
 	code := http.StatusCreated
 	shortURL, err := createShortURL(r.Context(), req.URL, storage)
 	if err != nil {
-		if errors.Is(err, internalStorage.DuplicateErr) {
+		if errors.Is(err, internalStorage.ErrDuplicate) {
 			code = http.StatusConflict
 		} else {
 			w.WriteHeader(http.StatusBadRequest)
