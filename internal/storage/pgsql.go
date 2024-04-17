@@ -10,6 +10,8 @@ import (
 	"github.com/kirilltitov/go-shortener/internal/logger"
 )
 
+var DuplicateErr = errors.New("duplicate URL found")
+
 type PgSQL struct {
 	C *pgx.Conn
 }
@@ -56,7 +58,7 @@ func (p PgSQL) Set(ctx context.Context, URL string) (string, error) {
 
 	shortURL, err := txInsert(ctx, tx, URL)
 	if err != nil {
-		return "", err
+		return shortURL, err
 	}
 	if err := tx.Commit(ctx); err != nil {
 		return "", err
@@ -124,8 +126,10 @@ func txInsert(ctx context.Context, tx pgx.Tx, URL string) (string, error) {
 	}
 
 	var shortURL string
+	var err error
 	if inserted.ShortURL != "" {
 		shortURL = inserted.ShortURL
+		err = DuplicateErr
 		logger.Log.Infof(
 			"Found duplicate for URL '%s', returning pre-existing short URL '%s' (this is %dth duplicate)",
 			URL, shortURL, inserted.Duplicates)
@@ -136,5 +140,5 @@ func txInsert(ctx context.Context, tx pgx.Tx, URL string) (string, error) {
 		}
 	}
 
-	return shortURL, nil
+	return shortURL, err
 }

@@ -4,12 +4,14 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 
 	"github.com/kirilltitov/go-shortener/internal/config"
 	"github.com/kirilltitov/go-shortener/internal/logger"
+	internalStorage "github.com/kirilltitov/go-shortener/internal/storage"
 	"github.com/kirilltitov/go-shortener/internal/utils"
 )
 
@@ -19,11 +21,8 @@ func createShortURL(ctx context.Context, URL string, storage Storage) (string, e
 	}
 
 	shortURL, err := storage.Set(ctx, URL)
-	if err != nil {
-		return "", err
-	}
 
-	return formatShortURL(shortURL), nil
+	return formatShortURL(shortURL), err
 }
 
 func formatShortURL(shortURL string) string {
@@ -38,15 +37,20 @@ func HandlerCreateShortURL(w http.ResponseWriter, r *http.Request, storage Stora
 		return
 	}
 
+	code := http.StatusCreated
 	URL := string(b)
 	shortURL, err := createShortURL(r.Context(), URL, storage)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		io.WriteString(w, fmt.Sprintf("%s\n", err.Error()))
-		return
+		if errors.Is(err, internalStorage.DuplicateErr) {
+			code = http.StatusConflict
+		} else {
+			w.WriteHeader(http.StatusBadRequest)
+			io.WriteString(w, fmt.Sprintf("%s\n", err.Error()))
+			return
+		}
 	}
 
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(code)
 	io.WriteString(w, shortURL)
 }
 
@@ -69,11 +73,16 @@ func APIHandlerCreateShortURL(w http.ResponseWriter, r *http.Request, storage St
 		return
 	}
 
+	code := http.StatusCreated
 	shortURL, err := createShortURL(r.Context(), req.URL, storage)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		log.Info(err.Error())
-		return
+		if errors.Is(err, internalStorage.DuplicateErr) {
+			code = http.StatusConflict
+		} else {
+			w.WriteHeader(http.StatusBadRequest)
+			log.Info(err.Error())
+			return
+		}
 	}
 
 	resp := response{Result: shortURL}
@@ -82,6 +91,6 @@ func APIHandlerCreateShortURL(w http.ResponseWriter, r *http.Request, storage St
 		panic(err)
 	}
 
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(code)
 	w.Write(responseBytes)
 }
