@@ -7,6 +7,7 @@ import (
 
 	"github.com/georgysavva/scany/v2/pgxscan"
 	"github.com/jackc/pgx/v5"
+
 	"github.com/kirilltitov/go-shortener/internal/logger"
 )
 

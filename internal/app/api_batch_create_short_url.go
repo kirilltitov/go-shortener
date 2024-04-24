@@ -1,4 +1,4 @@
-package handlers
+package app
 
 import (
 	"bytes"
@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/kirilltitov/go-shortener/internal/logger"
-	internalStorage "github.com/kirilltitov/go-shortener/internal/storage"
+	"github.com/kirilltitov/go-shortener/internal/storage"
 )
 
 type batchRequest []batchRequestRow
@@ -21,7 +21,7 @@ type batchResponseRow struct {
 	ShortURL      string `json:"short_url"`
 }
 
-func APIHandlerBatchCreateShortURL(w http.ResponseWriter, r *http.Request, storage Storage) {
+func (a *Application) APIHandlerBatchCreateShortURL(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	log := logger.Log
@@ -41,16 +41,16 @@ func APIHandlerBatchCreateShortURL(w http.ResponseWriter, r *http.Request, stora
 	}
 	defer r.Body.Close()
 
-	var items internalStorage.Items
+	var items storage.Items
 	for _, r := range b {
-		items = append(items, internalStorage.Item{
+		items = append(items, storage.Item{
 			UUID: r.CorrelationID,
 			URL:  r.OriginalURL,
 		})
 		logger.Log.Infof("Loaded row %+v from body", r)
 	}
 
-	result, err := storage.MultiSet(r.Context(), items)
+	result, err := a.Shortener.MultiShorten(r.Context(), items)
 	if err != nil {
 		log.Infof("Could not batch insert: %v", err)
 		w.WriteHeader(http.StatusBadRequest)
@@ -62,7 +62,7 @@ func APIHandlerBatchCreateShortURL(w http.ResponseWriter, r *http.Request, stora
 	for _, item := range result {
 		response = append(response, batchResponseRow{
 			CorrelationID: item.UUID,
-			ShortURL:      formatShortURL(item.URL),
+			ShortURL:      a.Shortener.FormatShortURL(item.URL),
 		})
 	}
 
