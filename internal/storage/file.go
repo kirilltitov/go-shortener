@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -10,51 +11,96 @@ import (
 	"github.com/kirilltitov/go-shortener/internal/logger"
 )
 
-type row struct {
+type File struct {
+	InMemory
+	path string
+}
+
+type fileRow struct {
 	UUID        string `json:"uuid"`
 	ShortURL    string `json:"short_url"`
 	OriginalURL string `json:"original_url"`
 }
 
-type setter interface {
-	Set(int, string)
+func NewFileStorage(ctx context.Context, path string) (*File, error) {
+	result := &File{
+		InMemory: *NewInMemoryStorage(ctx),
+		path:     path,
+	}
+
+	if err := result.LoadStorageFromFile(ctx); err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
-func LoadStorageFromFile(path string, s setter, cur *int) error {
-	file, err := os.OpenFile(path, os.O_RDONLY, 0444)
+func (f *File) Set(ctx context.Context, URL string) (string, error) {
+	shortURL, err := f.InMemory.Set(ctx, URL)
 	if err != nil {
-		logger.Log.Infof("No storage file '%s'", path)
+		return "", err
+	}
+
+	if err := f.saveRowToFile(*f.cur, shortURL, URL); err != nil {
+		return "", err
+	}
+
+	return shortURL, nil
+}
+
+func (f *File) MultiSet(ctx context.Context, items Items) (Items, error) {
+	var result Items
+
+	for _, item := range items {
+		shortURL, err := f.Set(ctx, item.URL)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, Item{
+			UUID: item.UUID,
+			URL:  shortURL,
+		})
+	}
+
+	return result, nil
+}
+
+func (f *File) LoadStorageFromFile(ctx context.Context) error {
+	file, err := os.OpenFile(f.path, os.O_RDONLY, 0444)
+	if err != nil {
+		logger.Log.Infof("No storage file '%s'", f.path)
 		return nil
 	}
 
 	decoder := json.NewDecoder(file)
 
 	for {
-		var r row
-		if err := decoder.Decode(&r); err == io.EOF {
+		var r fileRow
+		if err := decoder.Decode(&r); errors.Is(err, io.EOF) {
 			break
 		} else if err != nil {
 			logger.Log.Fatal(err)
 			continue
 		}
-		*cur++
-		s.Set(*cur, r.OriginalURL)
+		if _, err := f.InMemory.Set(ctx, r.OriginalURL); err != nil {
+			return err
+		}
 		logger.Log.Infof("Loaded row %+v from file", r)
 	}
 
 	return file.Close()
 }
 
-func SaveRowToFile(path string, cur int, shortURL, URL string) error {
-	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
+func (f *File) saveRowToFile(idx int, shortURL, URL string) error {
+	file, err := os.OpenFile(f.path, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		return err
 	}
 
 	encoder := json.NewEncoder(file)
 
-	if err := encoder.Encode(row{
-		UUID:        strconv.Itoa(cur),
+	if err := encoder.Encode(fileRow{
+		UUID:        strconv.Itoa(idx),
 		ShortURL:    shortURL,
 		OriginalURL: URL,
 	}); err != nil {
@@ -64,14 +110,14 @@ func SaveRowToFile(path string, cur int, shortURL, URL string) error {
 	return file.Close()
 }
 
-func WipeFileStorage(path string) {
-	if _, err := os.Stat(path); errors.Is(err, os.ErrNotExist) {
-		logger.Log.Infof("Storage file '%s' doesn't exist, nothing to wipe", path)
+func (f *File) WipeFileStorage() {
+	if _, err := os.Stat(f.path); errors.Is(err, os.ErrNotExist) {
+		logger.Log.Infof("Storage file '%s' doesn't exist, nothing to wipe", f.path)
 		return
 	} else if err != nil {
 		panic(err)
 	}
-	if err := os.Remove(path); err != nil {
+	if err := os.Remove(f.path); err != nil {
 		panic(err)
 	}
 }

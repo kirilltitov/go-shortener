@@ -4,11 +4,25 @@ import (
 	"os"
 )
 
-func Parse() {
-	parseFlags()
+type Config struct {
+	ServerAddress   string
+	BaseURL         string
+	FileStoragePath string
+	DatabaseDSN     string
 }
 
-func GetServerAddress() string {
+func New() Config {
+	parseFlags()
+
+	return Config{
+		ServerAddress:   getServerAddress(),
+		BaseURL:         getBaseURL(),
+		FileStoragePath: getFileStoragePath(),
+		DatabaseDSN:     getDatabaseDSN(),
+	}
+}
+
+func getServerAddress() string {
 	var result = flagBind
 
 	envServerAddress := os.Getenv("SERVER_ADDRESS")
@@ -19,7 +33,7 @@ func GetServerAddress() string {
 	return result
 }
 
-func GetBaseURL() string {
+func getBaseURL() string {
 	var result = flagBaseURL
 
 	envBaseURL := os.Getenv("BASE_URL")
@@ -30,12 +44,23 @@ func GetBaseURL() string {
 	return result
 }
 
-func GetFileStoragePath() string {
+func getFileStoragePath() string {
 	var result = flagFileStoragePath
 
 	envFileStoragePath := os.Getenv("FILE_STORAGE_PATH")
 	if envFileStoragePath != "" {
 		result = envFileStoragePath
+	}
+
+	return result
+}
+
+func getDatabaseDSN() string {
+	var result = flagDatabaseDSN
+
+	envDatabaseDSN := os.Getenv("DATABASE_DSN")
+	if envDatabaseDSN != "" {
+		result = envDatabaseDSN
 	}
 
 	return result

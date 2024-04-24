@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -8,12 +9,14 @@ import (
 )
 
 func TestInMemory(t *testing.T) {
-	storage := InMemory{}
+	ctx := context.Background()
+	storage := NewInMemoryStorage(ctx)
 
-	storage.Set(1337, "foo")
+	shortURL, err := storage.Set(ctx, "https://ya.ru")
+	require.NoError(t, err)
 
-	result, ok := storage.Get(1337)
-	require.True(t, ok)
+	result, err := storage.Get(ctx, shortURL)
+	require.NoError(t, err)
 
-	assert.Equal(t, "foo", result)
+	assert.Equal(t, "https://ya.ru", result)
 }
