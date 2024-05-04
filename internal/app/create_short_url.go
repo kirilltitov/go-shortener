@@ -26,7 +26,7 @@ func (a *Application) HandlerCreateShortURL(w http.ResponseWriter, r *http.Reque
 
 	if userID == nil {
 		w.WriteHeader(http.StatusUnauthorized)
-		io.WriteString(w, fmt.Sprintf("User not authenticated: %s\n", err.Error()))
+		io.WriteString(w, fmt.Sprintf("User not authenticated\n"))
 		return
 	}
 

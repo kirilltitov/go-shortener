@@ -100,7 +100,9 @@ func TestApplication_authenticate(t *testing.T) {
 			}
 
 			if tt.want.cookieWritten == true {
-				_, ok := w.Result().Header["Set-Cookie"]
+				resp := w.Result()
+				defer resp.Body.Close()
+				_, ok := resp.Header["Set-Cookie"]
 				assert.True(t, ok)
 			}
 		})

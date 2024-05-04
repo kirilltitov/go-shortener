@@ -40,7 +40,7 @@ func (a *Application) APIHandlerCreateShortURL(w http.ResponseWriter, r *http.Re
 
 	if userID == nil {
 		w.WriteHeader(http.StatusUnauthorized)
-		io.WriteString(w, fmt.Sprintf("User not authenticated: %s\n", err.Error()))
+		io.WriteString(w, fmt.Sprintf("User not authenticated\n"))
 		return
 	}
 
