@@ -19,7 +19,7 @@ func (a *Application) APIUserURLs(w http.ResponseWriter, r *http.Request) {
 
 	if userID == nil {
 		w.WriteHeader(http.StatusUnauthorized)
-		io.WriteString(w, fmt.Sprintf("User not authenticated\n"))
+		io.WriteString(w, "User not authenticated")
 		return
 	}
 
