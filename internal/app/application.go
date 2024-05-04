@@ -44,6 +44,7 @@ func (a *Application) createRouter() chi.Router {
 	router.Get("/ping", logger.WithLogging(a.HandlerPing))
 
 	router.Post("/api/get", logger.WithLogging(a.APIHandlerGetURL))
+	router.Get("/api/user/urls", logger.WithLogging(a.APIUserURLs))
 	router.Post("/api/shorten", logger.WithLogging(a.APIHandlerCreateShortURL))
 	router.Post("/api/shorten/batch", logger.WithLogging(a.APIHandlerBatchCreateShortURL))
 

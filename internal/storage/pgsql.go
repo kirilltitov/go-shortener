@@ -3,9 +3,11 @@ package storage
 import (
 	"context"
 	"errors"
+	"strconv"
 	"time"
 
 	"github.com/georgysavva/scany/v2/pgxscan"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 
 	"github.com/kirilltitov/go-shortener/internal/logger"
@@ -30,6 +32,7 @@ func NewPgSQLStorage(ctx context.Context, DSN string) (*PgSQL, error) {
 
 type DBRow struct {
 	ID         int       `db:"id"`
+	UserID     uuid.UUID `db:"user_id"`
 	ShortURL   string    `db:"short_url"`
 	URL        string    `db:"url"`
 	Duplicates int       `db:"duplicates"`
@@ -51,14 +54,14 @@ func (p PgSQL) Get(ctx context.Context, shortURL string) (string, error) {
 	return row.URL, nil
 }
 
-func (p PgSQL) Set(ctx context.Context, URL string) (string, error) {
+func (p PgSQL) Set(ctx context.Context, userID uuid.UUID, URL string) (string, error) {
 	tx, err := p.C.Begin(ctx)
 	if err != nil {
 		return "", err
 	}
 	defer tx.Rollback(ctx)
 
-	shortURL, err := txInsert(ctx, tx, URL)
+	shortURL, err := txInsert(ctx, tx, userID, URL)
 	if err != nil {
 		return shortURL, err
 	}
@@ -69,7 +72,7 @@ func (p PgSQL) Set(ctx context.Context, URL string) (string, error) {
 	return shortURL, nil
 }
 
-func (p PgSQL) MultiSet(ctx context.Context, items Items) (Items, error) {
+func (p PgSQL) MultiSet(ctx context.Context, userID uuid.UUID, items Items) (Items, error) {
 	tx, err := p.C.Begin(ctx)
 	if err != nil {
 		return nil, err
@@ -78,7 +81,7 @@ func (p PgSQL) MultiSet(ctx context.Context, items Items) (Items, error) {
 
 	var result Items
 	for _, item := range items {
-		shortURL, err := txInsert(ctx, tx, item.URL)
+		shortURL, err := txInsert(ctx, tx, userID, item.URL)
 		if err != nil {
 			return nil, err
 		}
@@ -96,12 +99,33 @@ func (p PgSQL) MultiSet(ctx context.Context, items Items) (Items, error) {
 	return result, nil
 }
 
+func (p PgSQL) GetByUser(ctx context.Context, userID uuid.UUID) (Items, error) {
+	var result Items
+
+	var rows []*DBRow
+	err := pgxscan.Select(ctx, p.C, &rows, `select * from url where user_id = $1`, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, row := range rows {
+		result = append(result, Item{
+			UUID:     strconv.Itoa(row.ID),
+			URL:      row.URL,
+			ShortURL: row.ShortURL,
+		})
+	}
+
+	return result, nil
+}
+
 // я не смог разобраться с Goose за приемлемое время :(
 func (p PgSQL) MigrateUp(ctx context.Context) error {
 	if _, err := p.C.Exec(ctx, `
 		create table if not exists url
 		(
 			id         serial primary key,
+			user_id    uuid not null,
 			short_url  varchar not null,
 			url        varchar not null constraint url_pk unique,
 			duplicates int not null default 0,
@@ -114,16 +138,16 @@ func (p PgSQL) MigrateUp(ctx context.Context) error {
 	return nil
 }
 
-func txInsert(ctx context.Context, tx pgx.Tx, URL string) (string, error) {
+func txInsert(ctx context.Context, tx pgx.Tx, userID uuid.UUID, URL string) (string, error) {
 	var inserted struct {
 		Cur        int    `db:"id"`
 		ShortURL   string `db:"short_url"`
 		Duplicates int    `db:"duplicates"`
 	}
 	if err := pgxscan.Get(ctx, tx, &inserted, `
-		insert into public.url (short_url, url) values ($1, $2)
+		insert into public.url (user_id, short_url, url) values ($1, $2, $3)
 		on conflict on constraint url_pk do update set duplicates = url.duplicates + 1 returning id, short_url, duplicates
-		`, "", URL); err != nil {
+		`, userID, "", URL); err != nil {
 		logger.Log.Infof("Could not insert new row: %+v", err)
 		return "", err
 	}

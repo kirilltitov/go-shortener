@@ -17,9 +17,22 @@ func (a *Application) HandlerCreateShortURL(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	userID, err := a.authenticate(r, w)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		io.WriteString(w, fmt.Sprintf("Could not authenticate user: %s\n", err.Error()))
+		return
+	}
+
+	if userID == nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		io.WriteString(w, fmt.Sprintf("User not authenticated: %s\n", err.Error()))
+		return
+	}
+
 	code := http.StatusCreated
 	URL := string(b)
-	shortURL, err := a.Shortener.ShortenURL(r.Context(), URL)
+	shortURL, err := a.Shortener.ShortenURL(r.Context(), *userID, URL)
 	if err != nil {
 		if errors.Is(err, storage.ErrDuplicate) {
 			code = http.StatusConflict

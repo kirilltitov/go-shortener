@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/kirilltitov/go-shortener/internal/logger"
@@ -29,8 +31,21 @@ func (a *Application) APIHandlerCreateShortURL(w http.ResponseWriter, r *http.Re
 		return
 	}
 
+	userID, err := a.authenticate(r, w)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		io.WriteString(w, fmt.Sprintf("Could not authenticate user: %s\n", err.Error()))
+		return
+	}
+
+	if userID == nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		io.WriteString(w, fmt.Sprintf("User not authenticated: %s\n", err.Error()))
+		return
+	}
+
 	code := http.StatusCreated
-	shortURL, err := a.Shortener.ShortenURL(r.Context(), req.URL)
+	shortURL, err := a.Shortener.ShortenURL(r.Context(), *userID, req.URL)
 	if err != nil {
 		if errors.Is(err, storage.ErrDuplicate) {
 			code = http.StatusConflict

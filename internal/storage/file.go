@@ -8,6 +8,7 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/google/uuid"
 	"github.com/kirilltitov/go-shortener/internal/logger"
 )
 
@@ -17,9 +18,10 @@ type File struct {
 }
 
 type fileRow struct {
-	UUID        string `json:"uuid"`
-	ShortURL    string `json:"short_url"`
-	OriginalURL string `json:"original_url"`
+	UUID        string    `json:"uuid"`
+	UserID      uuid.UUID `json:"user_id"`
+	ShortURL    string    `json:"short_url"`
+	OriginalURL string    `json:"original_url"`
 }
 
 func NewFileStorage(ctx context.Context, path string) (*File, error) {
@@ -35,24 +37,24 @@ func NewFileStorage(ctx context.Context, path string) (*File, error) {
 	return result, nil
 }
 
-func (f *File) Set(ctx context.Context, URL string) (string, error) {
-	shortURL, err := f.InMemory.Set(ctx, URL)
+func (f *File) Set(ctx context.Context, userID uuid.UUID, URL string) (string, error) {
+	shortURL, err := f.InMemory.Set(ctx, userID, URL)
 	if err != nil {
 		return "", err
 	}
 
-	if err := f.saveRowToFile(*f.cur, shortURL, URL); err != nil {
+	if err := f.saveRowToFile(*f.cur, userID, shortURL, URL); err != nil {
 		return "", err
 	}
 
 	return shortURL, nil
 }
 
-func (f *File) MultiSet(ctx context.Context, items Items) (Items, error) {
+func (f *File) MultiSet(ctx context.Context, userID uuid.UUID, items Items) (Items, error) {
 	var result Items
 
 	for _, item := range items {
-		shortURL, err := f.Set(ctx, item.URL)
+		shortURL, err := f.Set(ctx, userID, item.URL)
 		if err != nil {
 			return nil, err
 		}
@@ -82,7 +84,7 @@ func (f *File) LoadStorageFromFile(ctx context.Context) error {
 			logger.Log.Fatal(err)
 			continue
 		}
-		if _, err := f.InMemory.Set(ctx, r.OriginalURL); err != nil {
+		if _, err := f.InMemory.Set(ctx, r.UserID, r.OriginalURL); err != nil {
 			return err
 		}
 		logger.Log.Infof("Loaded row %+v from file", r)
@@ -91,7 +93,7 @@ func (f *File) LoadStorageFromFile(ctx context.Context) error {
 	return file.Close()
 }
 
-func (f *File) saveRowToFile(idx int, shortURL, URL string) error {
+func (f *File) saveRowToFile(idx int, userID uuid.UUID, shortURL, URL string) error {
 	file, err := os.OpenFile(f.path, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		return err
@@ -101,6 +103,7 @@ func (f *File) saveRowToFile(idx int, shortURL, URL string) error {
 
 	if err := encoder.Encode(fileRow{
 		UUID:        strconv.Itoa(idx),
+		UserID:      userID,
 		ShortURL:    shortURL,
 		OriginalURL: URL,
 	}); err != nil {

@@ -3,6 +3,8 @@ package app
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/kirilltitov/go-shortener/internal/logger"
@@ -41,6 +43,19 @@ func (a *Application) APIHandlerBatchCreateShortURL(w http.ResponseWriter, r *ht
 	}
 	defer r.Body.Close()
 
+	userID, err := a.authenticate(r, w)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		io.WriteString(w, fmt.Sprintf("Could not authenticate user: %s\n", err.Error()))
+		return
+	}
+
+	if userID == nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		io.WriteString(w, fmt.Sprintf("User not authenticated: %s\n", err.Error()))
+		return
+	}
+
 	var items storage.Items
 	for _, r := range b {
 		items = append(items, storage.Item{
@@ -50,7 +65,7 @@ func (a *Application) APIHandlerBatchCreateShortURL(w http.ResponseWriter, r *ht
 		logger.Log.Infof("Loaded row %+v from body", r)
 	}
 
-	result, err := a.Shortener.MultiShorten(r.Context(), items)
+	result, err := a.Shortener.MultiShorten(r.Context(), *userID, items)
 	if err != nil {
 		log.Infof("Could not batch insert: %v", err)
 		w.WriteHeader(http.StatusBadRequest)
