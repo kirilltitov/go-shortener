@@ -19,11 +19,14 @@ const (
 	JWTSecret     = "hesoyam"
 )
 
-func (a *Application) authenticate(r *http.Request, w http.ResponseWriter) (*uuid.UUID, error) {
+func (a *Application) authenticate(r *http.Request, w http.ResponseWriter, force bool) (*uuid.UUID, error) {
 	logger.Log.Infof("Will try to authenticate user")
 
 	cookie, err := r.Cookie(JWTCookieName)
 	if err != nil {
+		if force {
+			return nil, nil
+		}
 		if errors.Is(err, http.ErrNoCookie) {
 			logger.Log.Infof("Auth cookie not found, will issue new")
 
@@ -55,6 +58,9 @@ func (a *Application) authenticate(r *http.Request, w http.ResponseWriter) (*uui
 	})
 
 	if err != nil || !token.Valid {
+		if force {
+			return nil, nil
+		}
 		logger.Log.Infof("Could not parse auth cookie or JWT not valid, will issue new")
 
 		userID, err := uuid.NewV6()

@@ -43,7 +43,7 @@ func (a *Application) APIHandlerBatchCreateShortURL(w http.ResponseWriter, r *ht
 	}
 	defer r.Body.Close()
 
-	userID, err := a.authenticate(r, w)
+	userID, err := a.authenticate(r, w, false)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		io.WriteString(w, fmt.Sprintf("Could not authenticate user: %s\n", err.Error()))

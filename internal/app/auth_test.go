@@ -92,7 +92,7 @@ func TestApplication_authenticate(t *testing.T) {
 				})
 			}
 
-			userID, err := a.authenticate(r, w)
+			userID, err := a.authenticate(r, w, false)
 			require.NoError(t, err)
 
 			if tt.want.userID != nil {

@@ -10,7 +10,7 @@ import (
 func (a *Application) APIUserURLs(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	userID, err := a.authenticate(r, w)
+	userID, err := a.authenticate(r, w, true)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		io.WriteString(w, fmt.Sprintf("Could not authenticate user: %s\n", err.Error()))
