@@ -52,7 +52,7 @@ func (p PgSQL) Get(ctx context.Context, shortURL string) (string, error) {
 
 	logger.Log.Infof("Queried row %v", row)
 
-	if row.IsDeleted == true {
+	if row.IsDeleted {
 		return "", ErrDeleted
 	}
 
