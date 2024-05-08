@@ -9,10 +9,7 @@ import (
 	"github.com/kirilltitov/go-shortener/internal/utils"
 )
 
-func (s *Shortener) DeleteUserURLs(ctx context.Context, userID uuid.UUID, URLs []string) chan error {
-	doneCh := make(chan struct{})
-	defer close(doneCh)
-
+func (s *Shortener) DeleteUserURLs(ctx context.Context, doneCh chan struct{}, userID uuid.UUID, URLs []string) chan error {
 	inputCh := utils.Generator(doneCh, URLs)
 
 	return utils.FanIn(doneCh, utils.FanOut(10, func() chan error {
@@ -22,10 +19,12 @@ func (s *Shortener) DeleteUserURLs(ctx context.Context, userID uuid.UUID, URLs [
 			defer close(result)
 
 			for URL := range inputCh {
+				logger.Log.Infof("About to delete URL '%s' by user %s", URL, userID)
 				err := s.container.Storage.DeleteByUser(ctx, userID, URL)
 				if err != nil {
 					logger.Log.Warnf("Could not delete URL '%s' for user '%s': %s", URL, userID, err.Error())
 				}
+				logger.Log.Infof("URL '%s' by user %s deleted", URL, userID)
 				select {
 				case <-doneCh:
 					return

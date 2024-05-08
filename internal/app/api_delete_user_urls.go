@@ -2,6 +2,7 @@ package app
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -42,7 +43,16 @@ func (a *Application) APIDeleteUserURLs(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	go a.Shortener.DeleteUserURLs(r.Context(), *userID, req)
+	doneCh := make(chan struct{})
+	go func() {
+		for err := range a.Shortener.DeleteUserURLs(context.Background(), doneCh, *userID, req) {
+			if err != nil {
+				logger.Log.Infof("Something wen wrong during URL deletion: %s", err)
+			}
+		}
+
+		defer close(doneCh)
+	}()
 
 	w.WriteHeader(http.StatusAccepted)
 }
