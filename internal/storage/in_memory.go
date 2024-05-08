@@ -79,3 +79,11 @@ func (s InMemory) GetByUser(ctx context.Context, userID uuid.UUID) (Items, error
 
 	return result, nil
 }
+
+func (s InMemory) DeleteByUser(ctx context.Context, userID uuid.UUID, shortURL string) error {
+	if val, ok := s.storage[shortURL]; ok == true && val.userID == userID {
+		delete(s.storage, shortURL)
+	}
+
+	return nil
+}

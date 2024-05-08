@@ -11,4 +11,5 @@ type Storage interface {
 	Set(ctx context.Context, userID uuid.UUID, URL string) (string, error)
 	MultiSet(ctx context.Context, userID uuid.UUID, items Items) (Items, error)
 	GetByUser(ctx context.Context, userID uuid.UUID) (Items, error)
+	DeleteByUser(ctx context.Context, userID uuid.UUID, shortURL string) error
 }

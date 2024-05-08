@@ -45,6 +45,7 @@ func (a *Application) createRouter() chi.Router {
 
 	router.Post("/api/get", logger.WithLogging(a.APIHandlerGetURL))
 	router.Get("/api/user/urls", logger.WithLogging(a.APIUserURLs))
+	router.Delete("/api/user/urls", logger.WithLogging(a.APIDeleteUserURLs))
 	router.Post("/api/shorten", logger.WithLogging(a.APIHandlerCreateShortURL))
 	router.Post("/api/shorten/batch", logger.WithLogging(a.APIHandlerBatchCreateShortURL))
 

@@ -35,6 +35,7 @@ type DBRow struct {
 	UserID     uuid.UUID `db:"user_id"`
 	ShortURL   string    `db:"short_url"`
 	URL        string    `db:"url"`
+	IsDeleted  bool      `db:"is_deleted"`
 	Duplicates int       `db:"duplicates"`
 	CreatedAt  time.Time `db:"created_at"`
 }
@@ -50,6 +51,10 @@ func (p PgSQL) Get(ctx context.Context, shortURL string) (string, error) {
 	}
 
 	logger.Log.Infof("Queried row %v", row)
+
+	if row.IsDeleted == true {
+		return "", ErrDeleted
+	}
 
 	return row.URL, nil
 }
@@ -119,6 +124,17 @@ func (p PgSQL) GetByUser(ctx context.Context, userID uuid.UUID) (Items, error) {
 	return result, nil
 }
 
+func (p PgSQL) DeleteByUser(ctx context.Context, userID uuid.UUID, shortURL string) error {
+	res, err := p.C.Exec(ctx, `update url set is_deleted = true where short_url = $1 and user_id = $2`, shortURL, userID)
+	if err != nil {
+		return err
+	}
+
+	logger.Log.Infof("Deleting URL '%s' for user %s: %d rows affected", shortURL, userID, res.RowsAffected())
+
+	return nil
+}
+
 // я не смог разобраться с Goose за приемлемое время :(
 func (p PgSQL) MigrateUp(ctx context.Context) error {
 	if _, err := p.C.Exec(ctx, `
@@ -128,6 +144,7 @@ func (p PgSQL) MigrateUp(ctx context.Context) error {
 			user_id    uuid not null,
 			short_url  varchar not null,
 			url        varchar not null constraint url_pk unique,
+			is_deleted bool not null default false,
 			duplicates int not null default 0,
 			created_at timestamp default CURRENT_TIMESTAMP not null
 		)
