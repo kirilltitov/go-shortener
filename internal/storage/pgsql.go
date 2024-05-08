@@ -9,25 +9,31 @@ import (
 	"github.com/georgysavva/scany/v2/pgxscan"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/kirilltitov/go-shortener/internal/logger"
 )
 
 var ErrDuplicate = errors.New("duplicate URL found")
 
 type PgSQL struct {
-	C *pgx.Conn
+	C *pgxpool.Pool
 }
 
 func NewPgSQLStorage(ctx context.Context, DSN string) (*PgSQL, error) {
-	conn, err := pgx.Connect(ctx, DSN)
+	conf, err := pgxpool.ParseConfig(DSN)
+	if err != nil {
+		return nil, err
+	}
+	conf.MaxConns = 10
+
+	pool, err := pgxpool.NewWithConfig(ctx, conf)
 	if err != nil {
 		return nil, err
 	}
 
 	logger.Log.Infof("Connected to PgSQL with DSN %s", DSN)
 
-	return &PgSQL{C: conn}, nil
+	return &PgSQL{C: pool}, nil
 }
 
 type DBRow struct {
