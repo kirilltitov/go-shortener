@@ -2,22 +2,21 @@ package app
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
 
 	"github.com/kirilltitov/go-shortener/internal/logger"
-	"github.com/kirilltitov/go-shortener/internal/storage"
 )
 
-func (a *Application) APIHandlerCreateShortURL(w http.ResponseWriter, r *http.Request) {
+func (a *Application) APIDeleteUserURLs(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	log := logger.Log
 
-	var req request
+	var req []string
 	var buf bytes.Buffer
 
 	if _, err := buf.ReadFrom(r.Body); err != nil {
@@ -44,24 +43,16 @@ func (a *Application) APIHandlerCreateShortURL(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	code := http.StatusCreated
-	shortURL, err := a.Shortener.ShortenURL(r.Context(), *userID, req.URL)
-	if err != nil {
-		if errors.Is(err, storage.ErrDuplicate) {
-			code = http.StatusConflict
-		} else {
-			w.WriteHeader(http.StatusBadRequest)
-			log.Info(err.Error())
-			return
+	doneCh := make(chan struct{})
+	go func() {
+		for err := range a.Shortener.DeleteUserURLs(context.Background(), doneCh, *userID, req) {
+			if err != nil {
+				logger.Log.Infof("Something wen wrong during URL deletion: %s", err)
+			}
 		}
-	}
 
-	resp := response{Result: shortURL}
-	responseBytes, err := json.Marshal(resp)
-	if err != nil {
-		panic(err)
-	}
+		defer close(doneCh)
+	}()
 
-	w.WriteHeader(code)
-	w.Write(responseBytes)
+	w.WriteHeader(http.StatusAccepted)
 }

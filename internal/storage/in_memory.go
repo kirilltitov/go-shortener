@@ -1,10 +1,16 @@
 package storage
 
-import "context"
+import (
+	"context"
+	"strconv"
+
+	"github.com/google/uuid"
+)
 
 type inMemoryRow struct {
-	cur int
-	URL string
+	cur    int
+	userID uuid.UUID
+	URL    string
 }
 
 type InMemory struct {
@@ -29,22 +35,23 @@ func (s InMemory) Get(ctx context.Context, shortURL string) (string, error) {
 	return val.URL, _err
 }
 
-func (s InMemory) Set(ctx context.Context, URL string) (string, error) {
+func (s InMemory) Set(ctx context.Context, userID uuid.UUID, URL string) (string, error) {
 	*s.cur++
 	shortURL := intToShortURL(*s.cur)
 	s.storage[shortURL] = inMemoryRow{
-		cur: *s.cur,
-		URL: URL,
+		cur:    *s.cur,
+		userID: userID,
+		URL:    URL,
 	}
 
 	return shortURL, nil
 }
 
-func (s InMemory) MultiSet(ctx context.Context, items Items) (Items, error) {
+func (s InMemory) MultiSet(ctx context.Context, userID uuid.UUID, items Items) (Items, error) {
 	var result Items
 
 	for _, item := range items {
-		shortURL, err := s.Set(ctx, item.URL)
+		shortURL, err := s.Set(ctx, userID, item.URL)
 		if err != nil {
 			return nil, err
 		}
@@ -55,4 +62,28 @@ func (s InMemory) MultiSet(ctx context.Context, items Items) (Items, error) {
 	}
 
 	return result, nil
+}
+
+func (s InMemory) GetByUser(ctx context.Context, userID uuid.UUID) (Items, error) {
+	var result Items
+
+	for shortURL, item := range s.storage {
+		if item.userID == userID {
+			result = append(result, Item{
+				UUID:     strconv.Itoa(item.cur),
+				URL:      item.URL,
+				ShortURL: shortURL,
+			})
+		}
+	}
+
+	return result, nil
+}
+
+func (s InMemory) DeleteByUser(ctx context.Context, userID uuid.UUID, shortURL string) error {
+	if val, ok := s.storage[shortURL]; ok && val.userID == userID {
+		delete(s.storage, shortURL)
+	}
+
+	return nil
 }
