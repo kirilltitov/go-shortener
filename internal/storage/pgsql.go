@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+
 	"github.com/kirilltitov/go-shortener/internal/logger"
 )
 
@@ -131,7 +132,18 @@ func (p PgSQL) GetByUser(ctx context.Context, userID uuid.UUID) (Items, error) {
 }
 
 func (p PgSQL) DeleteByUser(ctx context.Context, userID uuid.UUID, shortURL string) error {
-	res, err := p.C.Exec(ctx, `update url set is_deleted = true where short_url = $1 and user_id = $2`, shortURL, userID)
+	tx, err := p.C.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	res, err := tx.Exec(ctx, `update url set is_deleted = true where short_url = $1 and user_id = $2`, shortURL, userID)
+	if err != nil {
+		return err
+	}
+
+	err = tx.Commit(ctx)
 	if err != nil {
 		return err
 	}
