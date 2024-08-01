@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/kirilltitov/go-shortener/internal/config"
 	"github.com/kirilltitov/go-shortener/internal/container"
 	"github.com/kirilltitov/go-shortener/internal/logger"
@@ -38,6 +38,8 @@ func (a *Application) Run() error {
 
 func (a *Application) createRouter() chi.Router {
 	router := chi.NewRouter()
+
+	router.Mount("/debug", middleware.Profiler())
 
 	router.Post("/", logger.WithLogging(a.HandlerCreateShortURL))
 	router.Get("/{short}", logger.WithLogging(a.HandlerGetURL))

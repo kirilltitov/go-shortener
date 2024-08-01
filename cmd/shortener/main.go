@@ -12,14 +12,14 @@ func run() error {
 	cfg := config.New()
 	ctx := context.Background()
 
-	app, err := app.New(ctx, cfg)
+	a, err := app.New(ctx, cfg)
 	if err != nil {
 		return err
 	}
 
 	logger.Log.Infof("Starting server at %s", cfg.ServerAddress)
 
-	return app.Run()
+	return a.Run()
 }
 
 func main() {
