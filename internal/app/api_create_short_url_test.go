@@ -30,6 +30,7 @@ func BenchmarkApplication_APIHandlerGetURL(b *testing.B) {
 	result := w.Result()
 	defer result.Body.Close()
 	resultBody, err := io.ReadAll(result.Body)
+	require.NoError(b, err)
 	var res response
 	require.NoError(b, json.Unmarshal(resultBody, &res))
 
