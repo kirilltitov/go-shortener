@@ -16,10 +16,13 @@ import (
 
 var ErrDuplicate = errors.New("duplicate URL found")
 
+// PgSQL является хранилищем сокращенных ссылок в PostgreSQL.
 type PgSQL struct {
 	C *pgxpool.Pool
 }
 
+// NewPgSQLStorage создает, конфигурирует, соединяется с БД и возвращает объект хранилища PostgreSQL.
+// Возвращает ошибку, если не удалось подключиться к БД.
 func NewPgSQLStorage(ctx context.Context, DSN string) (*PgSQL, error) {
 	conf, err := pgxpool.ParseConfig(DSN)
 	if err != nil {
@@ -37,6 +40,7 @@ func NewPgSQLStorage(ctx context.Context, DSN string) (*PgSQL, error) {
 	return &PgSQL{C: pool}, nil
 }
 
+// DBRow являет собою запись из таблицы url.
 type DBRow struct {
 	ID         int       `db:"id"`
 	UserID     uuid.UUID `db:"user_id"`

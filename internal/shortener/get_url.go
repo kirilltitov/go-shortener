@@ -8,6 +8,8 @@ import (
 	"github.com/kirilltitov/go-shortener/internal/storage"
 )
 
+// GetURL возвращает оригинальную ссылку по переданному сокращенному идентификатору ссылки.
+// Может вернуть ошибку, если ссылка в хранилище не найдена.
 func (s *Shortener) GetURL(ctx context.Context, shortURL string) (string, error) {
 	url, err := s.container.Storage.Get(ctx, shortURL)
 	if err != nil {

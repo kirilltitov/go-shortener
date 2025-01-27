@@ -13,11 +13,13 @@ type inMemoryRow struct {
 	URL    string
 }
 
+// InMemory является хранилищем для сокращенных ссылок в памяти текущего процесса.
 type InMemory struct {
 	storage map[string]inMemoryRow
 	cur     *int
 }
 
+// NewInMemoryStorage создает и возвращает экземпляр хранилища в памяти.
 func NewInMemoryStorage(ctx context.Context) *InMemory {
 	return &InMemory{
 		storage: make(map[string]inMemoryRow),

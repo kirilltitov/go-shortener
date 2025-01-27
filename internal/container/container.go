@@ -8,10 +8,12 @@ import (
 	"github.com/kirilltitov/go-shortener/internal/storage"
 )
 
+// Container хранит в себе зависимости сервиса.
 type Container struct {
 	Storage storage.Storage
 }
 
+// New создает, конфигурирует и возвращает объект контейнера зависимостей.
 func New(ctx context.Context, cfg config.Config) (*Container, error) {
 	s, err := newStorage(ctx, cfg)
 	if err != nil {

@@ -19,6 +19,7 @@ type Application struct {
 	Shortener shortener.Shortener
 }
 
+// New создает и возвращает сконфигурированный объект веб-приложения сервиса.
 func New(ctx context.Context, cfg config.Config) (*Application, error) {
 	cnt, err := container.New(ctx, cfg)
 	if err != nil {
@@ -32,6 +33,7 @@ func New(ctx context.Context, cfg config.Config) (*Application, error) {
 	}, nil
 }
 
+// Run запускает веб-сервер приложения. Может вернуть ошибку при ошибке конфигурации (занятый порт и т. д.).
 func (a *Application) Run() error {
 	return http.ListenAndServe(a.Config.ServerAddress, utils.GzipHandle(a.createRouter()))
 }

@@ -13,6 +13,7 @@ import (
 	"github.com/kirilltitov/go-shortener/internal/logger"
 )
 
+// File является файловым хранилищем сокращенных ссылок.
 type File struct {
 	InMemory
 	path string
@@ -25,6 +26,7 @@ type fileRow struct {
 	OriginalURL string    `json:"original_url"`
 }
 
+// NewFileStorage создает, конфигурирует и возвращает экземпляр объекта файлового хранилища для заданного пути хранения.
 func NewFileStorage(ctx context.Context, path string) (*File, error) {
 	result := &File{
 		InMemory: *NewInMemoryStorage(ctx),
@@ -114,6 +116,7 @@ func (f *File) saveRowToFile(idx int, userID uuid.UUID, shortURL, URL string) er
 	return file.Close()
 }
 
+// WipeFileStorage безусловно очищает файловое хранилище.
 func (f *File) WipeFileStorage() {
 	if _, err := os.Stat(f.path); errors.Is(err, os.ErrNotExist) {
 		logger.Log.Infof("Storage file '%s' doesn't exist, nothing to wipe", f.path)
