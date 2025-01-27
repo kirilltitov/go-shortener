@@ -16,6 +16,7 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
+// Конфигурация JWT.
 const (
 	// JWTCookieName является ключом для названия куки, в которой будет храниться авторизационный JWT.
 	JWTCookieName = "access_token"

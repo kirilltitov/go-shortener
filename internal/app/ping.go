@@ -7,6 +7,7 @@ import (
 	"github.com/kirilltitov/go-shortener/internal/storage"
 )
 
+// HandlerPing является методом, возвращающим текущее здоровье сервиса.
 func (a *Application) HandlerPing(w http.ResponseWriter, r *http.Request) {
 	code := 200
 
