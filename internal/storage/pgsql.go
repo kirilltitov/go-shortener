@@ -14,6 +14,7 @@ import (
 	"github.com/kirilltitov/go-shortener/internal/logger"
 )
 
+// ErrDuplicate является ошибкой о дубликате ссылки.
 var ErrDuplicate = errors.New("duplicate URL found")
 
 // PgSQL является хранилищем сокращенных ссылок в PostgreSQL.
