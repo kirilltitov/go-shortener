@@ -23,6 +23,7 @@ type batchResponseRow struct {
 	ShortURL      string `json:"short_url"`
 }
 
+// APIHandlerBatchCreateShortURL является API-методом для сокращения множества ссылок.
 func (a *Application) APIHandlerBatchCreateShortURL(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 

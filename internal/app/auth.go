@@ -11,13 +11,17 @@ import (
 	"github.com/kirilltitov/go-shortener/internal/logger"
 )
 
+// Claims является объектом для декодинга переданного JWT.
 type Claims struct {
 	jwt.RegisteredClaims
 }
 
 const (
+	// JWTCookieName является ключом для названия куки, в которой будет храниться авторизационный JWT.
 	JWTCookieName = "access_token"
-	JWTSecret     = "hesoyam"
+
+	// JWTSecret является секретом для подписи авторизационного JWT.
+	JWTSecret = "hesoyam"
 )
 
 func (a *Application) authenticate(r *http.Request, w http.ResponseWriter, force bool) (*uuid.UUID, error) {

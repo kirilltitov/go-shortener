@@ -11,6 +11,7 @@ import (
 	"github.com/kirilltitov/go-shortener/internal/storage"
 )
 
+// HandlerGetURL является методом для перехода на оригинальную ссылку с сокращенной.
 func (a *Application) HandlerGetURL(w http.ResponseWriter, r *http.Request) {
 	result, err := a.Shortener.GetURL(r.Context(), chi.URLParam(r, "short"))
 

@@ -13,6 +13,7 @@ import (
 	"github.com/kirilltitov/go-shortener/internal/utils"
 )
 
+// Application является объектом веб-приложения сервиса.
 type Application struct {
 	Config    config.Config
 	Container *container.Container

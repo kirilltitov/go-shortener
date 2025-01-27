@@ -12,6 +12,7 @@ import (
 	"github.com/kirilltitov/go-shortener/internal/storage"
 )
 
+// APIHandlerCreateShortURL является API-методом для сокращения ссылки.
 func (a *Application) APIHandlerCreateShortURL(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 

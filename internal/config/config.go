@@ -4,6 +4,7 @@ import (
 	"os"
 )
 
+// Config является объектом для хранения конфигурации сервиса.
 type Config struct {
 	// ServerAddress является адресом (включая порт), на котором поднимется веб-сервер.
 	ServerAddress string

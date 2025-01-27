@@ -9,6 +9,7 @@ import (
 	"github.com/kirilltitov/go-shortener/internal/storage"
 )
 
+// HandlerCreateShortURL является методом для сокращения переданной ссылки.
 func (a *Application) HandlerCreateShortURL(w http.ResponseWriter, r *http.Request) {
 	b, err := io.ReadAll(r.Body)
 	if err != nil {

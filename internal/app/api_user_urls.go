@@ -7,6 +7,7 @@ import (
 	"net/http"
 )
 
+// APIUserURLs является API-методом для получения всех ссылок, сокращенных переданным пользователем.
 func (a *Application) APIUserURLs(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 

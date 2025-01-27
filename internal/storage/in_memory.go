@@ -27,6 +27,7 @@ func NewInMemoryStorage(ctx context.Context) *InMemory {
 	}
 }
 
+// Get загружает из хранилища информацию о сокращенной ссылке.
 func (s InMemory) Get(ctx context.Context, shortURL string) (string, error) {
 	var _err error = nil
 	val, ok := s.storage[shortURL]
@@ -37,6 +38,7 @@ func (s InMemory) Get(ctx context.Context, shortURL string) (string, error) {
 	return val.URL, _err
 }
 
+// Set записывает в хранилище информацию о сокращенной ссылке.
 func (s InMemory) Set(ctx context.Context, userID uuid.UUID, URL string) (string, error) {
 	*s.cur++
 	shortURL := intToShortURL(*s.cur)
@@ -49,6 +51,7 @@ func (s InMemory) Set(ctx context.Context, userID uuid.UUID, URL string) (string
 	return shortURL, nil
 }
 
+// MultiSet записывает в хранилище информацию о нескольких сокращенных ссылках.
 func (s InMemory) MultiSet(ctx context.Context, userID uuid.UUID, items Items) (Items, error) {
 	var result Items
 
@@ -66,6 +69,7 @@ func (s InMemory) MultiSet(ctx context.Context, userID uuid.UUID, items Items) (
 	return result, nil
 }
 
+// GetByUser загружает из хранилища все сокращенные ссылки пользователя.
 func (s InMemory) GetByUser(ctx context.Context, userID uuid.UUID) (Items, error) {
 	var result Items
 
@@ -82,6 +86,7 @@ func (s InMemory) GetByUser(ctx context.Context, userID uuid.UUID) (Items, error
 	return result, nil
 }
 
+// DeleteByUser удаляет из хранилища все сокращенные ссылки пользователя.
 func (s InMemory) DeleteByUser(ctx context.Context, userID uuid.UUID, shortURL string) error {
 	if val, ok := s.storage[shortURL]; ok && val.userID == userID {
 		delete(s.storage, shortURL)

@@ -40,6 +40,7 @@ func NewFileStorage(ctx context.Context, path string) (*File, error) {
 	return result, nil
 }
 
+// Set записывает в хранилище информацию о сокращенной ссылке.
 func (f *File) Set(ctx context.Context, userID uuid.UUID, URL string) (string, error) {
 	shortURL, err := f.InMemory.Set(ctx, userID, URL)
 	if err != nil {
@@ -53,6 +54,7 @@ func (f *File) Set(ctx context.Context, userID uuid.UUID, URL string) (string, e
 	return shortURL, nil
 }
 
+// MultiSet записывает в хранилище информацию о нескольких сокращенных ссылках.
 func (f *File) MultiSet(ctx context.Context, userID uuid.UUID, items Items) (Items, error) {
 	var result Items
 
@@ -70,6 +72,7 @@ func (f *File) MultiSet(ctx context.Context, userID uuid.UUID, items Items) (Ite
 	return result, nil
 }
 
+// LoadStorageFromFile загружает хранилище из файла.
 func (f *File) LoadStorageFromFile(ctx context.Context) error {
 	file, err := os.OpenFile(f.path, os.O_RDONLY, 0444)
 	if err != nil {
