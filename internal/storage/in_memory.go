@@ -8,9 +8,9 @@ import (
 )
 
 type inMemoryRow struct {
+	URL    string
 	cur    int
 	userID uuid.UUID
-	URL    string
 }
 
 // InMemory является хранилищем для сокращенных ссылок в памяти текущего процесса.
