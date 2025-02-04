@@ -101,9 +101,9 @@ func (p PgSQL) MultiSet(ctx context.Context, userID uuid.UUID, items Items) (Ite
 
 	var result Items
 	for _, item := range items {
-		shortURL, err := txInsert(ctx, tx, userID, item.URL)
-		if err != nil {
-			return nil, err
+		shortURL, err2 := txInsert(ctx, tx, userID, item.URL)
+		if err2 != nil {
+			return nil, err2
 		}
 		result = append(result, Item{
 			UUID: item.UUID,
@@ -207,8 +207,8 @@ func txInsert(ctx context.Context, tx pgx.Tx, userID uuid.UUID, URL string) (str
 			URL, shortURL, inserted.Duplicates)
 	} else {
 		shortURL = intToShortURL(inserted.Cur)
-		if _, err := tx.Exec(ctx, `update public.url set short_url = $1 where id = $2`, shortURL, inserted.Cur); err != nil {
-			return "", err
+		if _, err2 := tx.Exec(ctx, `update public.url set short_url = $1 where id = $2`, shortURL, inserted.Cur); err2 != nil {
+			return "", err2
 		}
 	}
 
