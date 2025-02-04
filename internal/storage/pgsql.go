@@ -14,12 +14,16 @@ import (
 	"github.com/kirilltitov/go-shortener/internal/logger"
 )
 
+// ErrDuplicate является ошибкой о дубликате ссылки.
 var ErrDuplicate = errors.New("duplicate URL found")
 
+// PgSQL является хранилищем сокращенных ссылок в PostgreSQL.
 type PgSQL struct {
 	C *pgxpool.Pool
 }
 
+// NewPgSQLStorage создает, конфигурирует, соединяется с БД и возвращает объект хранилища PostgreSQL.
+// Возвращает ошибку, если не удалось подключиться к БД.
 func NewPgSQLStorage(ctx context.Context, DSN string) (*PgSQL, error) {
 	conf, err := pgxpool.ParseConfig(DSN)
 	if err != nil {
@@ -37,6 +41,7 @@ func NewPgSQLStorage(ctx context.Context, DSN string) (*PgSQL, error) {
 	return &PgSQL{C: pool}, nil
 }
 
+// DBRow являет собою запись из таблицы url.
 type DBRow struct {
 	ID         int       `db:"id"`
 	UserID     uuid.UUID `db:"user_id"`
@@ -47,6 +52,7 @@ type DBRow struct {
 	CreatedAt  time.Time `db:"created_at"`
 }
 
+// Get загружает из хранилища информацию о сокращенной ссылке.
 func (p PgSQL) Get(ctx context.Context, shortURL string) (string, error) {
 	var row DBRow
 	if err := pgxscan.Get(ctx, p.C, &row, `select * from public.url where short_url = $1`, shortURL); err != nil {
@@ -66,6 +72,7 @@ func (p PgSQL) Get(ctx context.Context, shortURL string) (string, error) {
 	return row.URL, nil
 }
 
+// Set записывает в хранилище информацию о сокращенной ссылке.
 func (p PgSQL) Set(ctx context.Context, userID uuid.UUID, URL string) (string, error) {
 	tx, err := p.C.Begin(ctx)
 	if err != nil {
@@ -84,6 +91,7 @@ func (p PgSQL) Set(ctx context.Context, userID uuid.UUID, URL string) (string, e
 	return shortURL, nil
 }
 
+// MultiSet записывает в хранилище информацию о нескольких сокращенных ссылках.
 func (p PgSQL) MultiSet(ctx context.Context, userID uuid.UUID, items Items) (Items, error) {
 	tx, err := p.C.Begin(ctx)
 	if err != nil {
@@ -111,6 +119,7 @@ func (p PgSQL) MultiSet(ctx context.Context, userID uuid.UUID, items Items) (Ite
 	return result, nil
 }
 
+// GetByUser загружает из хранилища все сокращенные ссылки пользователя.
 func (p PgSQL) GetByUser(ctx context.Context, userID uuid.UUID) (Items, error) {
 	var result Items
 
@@ -131,6 +140,7 @@ func (p PgSQL) GetByUser(ctx context.Context, userID uuid.UUID) (Items, error) {
 	return result, nil
 }
 
+// DeleteByUser удаляет из хранилища все сокращенные ссылки пользователя.
 func (p PgSQL) DeleteByUser(ctx context.Context, userID uuid.UUID, shortURL string) error {
 	tx, err := p.C.Begin(ctx)
 	if err != nil {
@@ -153,7 +163,7 @@ func (p PgSQL) DeleteByUser(ctx context.Context, userID uuid.UUID, shortURL stri
 	return nil
 }
 
-// я не смог разобраться с Goose за приемлемое время :(
+// MigrateUp выполняет миграции в хранилище.
 func (p PgSQL) MigrateUp(ctx context.Context) error {
 	if _, err := p.C.Exec(ctx, `
 		create table if not exists url

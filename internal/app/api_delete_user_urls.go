@@ -11,6 +11,7 @@ import (
 	"github.com/kirilltitov/go-shortener/internal/logger"
 )
 
+// APIDeleteUserURLs является API-методом для удаления всех сокращенных ссылок для переданного пользователя.
 func (a *Application) APIDeleteUserURLs(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 

@@ -8,6 +8,7 @@ import (
 	"github.com/kirilltitov/go-shortener/internal/logger"
 )
 
+// APIHandlerGetURL является API-методом для получения полной ссылки из переданного короткого идентификатора.
 func (a *Application) APIHandlerGetURL(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 

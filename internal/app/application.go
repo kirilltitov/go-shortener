@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/kirilltitov/go-shortener/internal/config"
 	"github.com/kirilltitov/go-shortener/internal/container"
 	"github.com/kirilltitov/go-shortener/internal/logger"
@@ -13,12 +13,14 @@ import (
 	"github.com/kirilltitov/go-shortener/internal/utils"
 )
 
+// Application является объектом веб-приложения сервиса.
 type Application struct {
 	Config    config.Config
 	Container *container.Container
 	Shortener shortener.Shortener
 }
 
+// New создает и возвращает сконфигурированный объект веб-приложения сервиса.
 func New(ctx context.Context, cfg config.Config) (*Application, error) {
 	cnt, err := container.New(ctx, cfg)
 	if err != nil {
@@ -32,12 +34,15 @@ func New(ctx context.Context, cfg config.Config) (*Application, error) {
 	}, nil
 }
 
+// Run запускает веб-сервер приложения. Может вернуть ошибку при ошибке конфигурации (занятый порт и т. д.).
 func (a *Application) Run() error {
 	return http.ListenAndServe(a.Config.ServerAddress, utils.GzipHandle(a.createRouter()))
 }
 
 func (a *Application) createRouter() chi.Router {
 	router := chi.NewRouter()
+
+	router.Mount("/debug", middleware.Profiler())
 
 	router.Post("/", logger.WithLogging(a.HandlerCreateShortURL))
 	router.Get("/{short}", logger.WithLogging(a.HandlerGetURL))

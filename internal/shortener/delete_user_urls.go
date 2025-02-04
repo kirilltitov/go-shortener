@@ -9,6 +9,9 @@ import (
 	"github.com/kirilltitov/go-shortener/internal/utils"
 )
 
+// DeleteUserURLs асинхронно удаляет произвольное количество коротких ссылок указанного пользователя.
+// Возвращает канал, который может возвращать ошибки удаления коротких ссылок, либо закроется после успешного удаления
+// всего переданного списка ссылок.
 func (s *Shortener) DeleteUserURLs(ctx context.Context, doneCh chan struct{}, userID uuid.UUID, URLs []string) chan error {
 	inputCh := utils.Generator(doneCh, URLs)
 

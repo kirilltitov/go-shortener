@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -15,6 +16,39 @@ import (
 
 	"github.com/kirilltitov/go-shortener/internal/config"
 )
+
+func BenchmarkApplication_APIHandlerGetURL(b *testing.B) {
+	a, err := New(context.Background(), config.Config{})
+	require.NoError(b, err)
+
+	createURLBytes, err := json.Marshal(request{URL: "https://ya.ru"})
+	assert.NoError(b, err)
+	r := httptest.NewRequest(http.MethodPost, "/api/shorten", bytes.NewReader(createURLBytes))
+	w := httptest.NewRecorder()
+	a.APIHandlerCreateShortURL(w, r)
+
+	result := w.Result()
+	defer result.Body.Close()
+	resultBody, err := io.ReadAll(result.Body)
+	require.NoError(b, err)
+	var res response
+	require.NoError(b, json.Unmarshal(resultBody, &res))
+
+	inputBytes, err := json.Marshal(request{URL: res.Result[strings.LastIndex(res.Result, "/")+1:]})
+	assert.NoError(b, err)
+
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		r := httptest.NewRequest(http.MethodPost, "/api/get", bytes.NewReader(inputBytes))
+		w := httptest.NewRecorder()
+
+		a.APIHandlerGetURL(w, r)
+
+		result := w.Result()
+		defer result.Body.Close()
+	}
+}
 
 func TestAPIHandlerCreateShortURL(t *testing.T) {
 	a, err := New(context.Background(), config.Config{})

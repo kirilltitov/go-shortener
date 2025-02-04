@@ -7,10 +7,11 @@ import (
 	"net/http"
 )
 
+// APIUserURLs является API-методом для получения всех ссылок, сокращенных переданным пользователем.
 func (a *Application) APIUserURLs(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	userID, err := a.authenticate(r, w, true)
+	userID, err := a.authenticate(r, w, false)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		io.WriteString(w, fmt.Sprintf("Could not authenticate user: %s\n", err.Error()))
