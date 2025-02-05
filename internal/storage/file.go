@@ -21,9 +21,9 @@ type File struct {
 
 type fileRow struct {
 	UUID        string    `json:"uuid"`
-	UserID      uuid.UUID `json:"user_id"`
 	ShortURL    string    `json:"short_url"`
 	OriginalURL string    `json:"original_url"`
+	UserID      uuid.UUID `json:"user_id"`
 }
 
 // NewFileStorage создает, конфигурирует и возвращает экземпляр объекта файлового хранилища для заданного пути хранения.
