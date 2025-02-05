@@ -21,6 +21,9 @@ type Config struct {
 	// Если поле не выставлено, используется файловое хранилище,
 	// либо же (если у файлового хранилища не выставлен путь), хранилище в памяти.
 	DatabaseDSN string
+
+	// EnableHTTPS заставляет сервер запускаться в режиме HTTPS
+	EnableHTTPS string
 }
 
 // New создает, автоматически заполняет и возвращает экземпляр конфигурации сервиса.
@@ -37,6 +40,7 @@ func NewWithoutParsing() Config {
 		BaseURL:         getBaseURL(),
 		FileStoragePath: getFileStoragePath(),
 		DatabaseDSN:     getDatabaseDSN(),
+		EnableHTTPS:     getEnableHTTPS(),
 	}
 }
 
@@ -79,6 +83,17 @@ func getDatabaseDSN() string {
 	envDatabaseDSN := os.Getenv("DATABASE_DSN")
 	if envDatabaseDSN != "" {
 		result = envDatabaseDSN
+	}
+
+	return result
+}
+
+func getEnableHTTPS() string {
+	var result = flagEnableHTTPS
+
+	envEnableHTTPS := os.Getenv("ENABLE_HTTPS")
+	if envEnableHTTPS != "" {
+		result = envEnableHTTPS
 	}
 
 	return result

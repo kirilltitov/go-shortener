@@ -36,7 +36,20 @@ func New(ctx context.Context, cfg config.Config) (*Application, error) {
 
 // Run запускает веб-сервер приложения. Может вернуть ошибку при ошибке конфигурации (занятый порт и т. д.).
 func (a *Application) Run() error {
-	return http.ListenAndServe(a.Config.ServerAddress, utils.GzipHandle(a.createRouter()))
+	handler := utils.GzipHandle(a.createRouter())
+
+	if a.Config.EnableHTTPS == "" {
+		logger.Log.Infof("Starting a HTTP server")
+		return http.ListenAndServe(a.Config.ServerAddress, handler)
+	} else {
+		logger.Log.Infof("Starting a HTTPS server")
+		return http.ListenAndServeTLS(
+			a.Config.ServerAddress,
+			"localhost.crt",
+			"localhost.key",
+			handler,
+		)
+	}
 }
 
 func (a *Application) createRouter() chi.Router {
