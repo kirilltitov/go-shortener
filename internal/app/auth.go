@@ -41,12 +41,12 @@ func (a *Application) authenticate(r *http.Request, w http.ResponseWriter, force
 				return nil, err2
 			}
 
-			cookie, err2 := newCookie(userID)
+			newCookie, err2 := newCookie(userID)
 			if err2 != nil {
 				return nil, err2
 			}
 
-			http.SetCookie(w, cookie)
+			http.SetCookie(w, newCookie)
 
 			logger.Log.Infof("Auth cookie set for user %s", userID.String())
 
@@ -69,14 +69,14 @@ func (a *Application) authenticate(r *http.Request, w http.ResponseWriter, force
 		}
 		logger.Log.Infof("Could not parse auth cookie or JWT not valid, will issue new")
 
-		userID, err := uuid.NewV6()
-		if err != nil {
-			return nil, err
+		userID, err2 := uuid.NewV6()
+		if err2 != nil {
+			return nil, err2
 		}
 
-		cookie, err := newCookie(userID)
-		if err != nil {
-			return nil, err
+		cookie, err2 := newCookie(userID)
+		if err2 != nil {
+			return nil, err2
 		}
 
 		http.SetCookie(w, cookie)
