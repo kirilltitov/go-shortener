@@ -20,7 +20,7 @@ var (
 	buildCommit  string
 )
 
-func run() error {
+func main() {
 	v := version.Version{
 		BuildVersion: buildVersion,
 		BuildDate:    buildDate,
@@ -33,16 +33,10 @@ func run() error {
 
 	a, err := app.New(ctx, cfg)
 	if err != nil {
-		return err
+		panic(err)
 	}
 
 	logger.Log.Infof("Starting server at %s", cfg.ServerAddress)
 
-	return a.Run()
-}
-
-func main() {
-	if err := run(); err != nil {
-		panic(err)
-	}
+	a.Run()
 }
