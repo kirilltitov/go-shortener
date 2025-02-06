@@ -120,5 +120,7 @@ func (a *Application) createRouter() chi.Router {
 	router.Post("/api/shorten", logger.WithLogging(a.APIHandlerCreateShortURL))
 	router.Post("/api/shorten/batch", logger.WithLogging(a.APIHandlerBatchCreateShortURL))
 
+	router.Get("/api/internal/stats", logger.WithLogging(a.APIHandlerInternalStats))
+
 	return router
 }

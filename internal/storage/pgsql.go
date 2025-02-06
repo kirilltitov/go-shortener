@@ -163,6 +163,17 @@ func (p PgSQL) DeleteByUser(ctx context.Context, userID uuid.UUID, shortURL stri
 	return nil
 }
 
+// GetStats возвращает статистику хранилища.
+func (p PgSQL) GetStats(ctx context.Context) (*Stats, error) {
+	var stats Stats
+
+	if err := pgxscan.Get(ctx, p.C, &stats, `select count(distinct user_id) users, count(id) urls from public.url`); err != nil {
+		return nil, err
+	}
+
+	return &stats, nil
+}
+
 // MigrateUp выполняет миграции в хранилище.
 func (p PgSQL) MigrateUp(ctx context.Context) error {
 	if _, err := p.C.Exec(ctx, `

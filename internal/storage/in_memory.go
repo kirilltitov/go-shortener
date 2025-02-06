@@ -94,3 +94,22 @@ func (s InMemory) DeleteByUser(ctx context.Context, userID uuid.UUID, shortURL s
 
 	return nil
 }
+
+// GetStats возвращает статистику хранилища.
+func (s InMemory) GetStats(ctx context.Context) (*Stats, error) {
+	stats := Stats{
+		Users: 0,
+		URLs:  0,
+	}
+	userStats := make(map[uuid.UUID]bool)
+
+	for _, v := range s.storage {
+		if _, ok := userStats[v.userID]; !ok {
+			userStats[v.userID] = true
+			stats.Users++
+		}
+		stats.URLs++
+	}
+
+	return &stats, nil
+}

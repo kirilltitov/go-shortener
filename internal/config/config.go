@@ -1,6 +1,7 @@
 package config
 
 import (
+	"net"
 	"os"
 
 	"github.com/kirilltitov/go-shortener/internal/config/json"
@@ -27,6 +28,9 @@ type Config struct {
 
 	// EnableHTTPS заставляет сервер запускаться в режиме HTTPS
 	EnableHTTPS string
+
+	// TrustedSubnet является доверенной подсетью, запросы из которой разрешены для внутренних методов
+	TrustedSubnet *net.IPNet
 }
 
 // New создает, автоматически заполняет и возвращает экземпляр конфигурации сервиса.
@@ -60,6 +64,7 @@ func NewWithoutParsing() Config {
 		FileStoragePath: getFileStoragePath(jsonConfig),
 		DatabaseDSN:     getDatabaseDSN(jsonConfig),
 		EnableHTTPS:     getEnableHTTPS(jsonConfig),
+		TrustedSubnet:   getTrustedSubnet(jsonConfig),
 	}
 }
 
@@ -136,6 +141,31 @@ func getEnableHTTPS(jsonConfig json.Config) string {
 	}
 
 	return result
+}
+
+func getTrustedSubnet(jsonConfig json.Config) *net.IPNet {
+	var result = flagTrustedSubnet
+
+	envTrustedSubnet := os.Getenv("TRUSTED_SUBNET")
+	if envTrustedSubnet != "" {
+		result = envTrustedSubnet
+	}
+
+	if result == "" && jsonConfig.TrustedSubnet != "" {
+		result = jsonConfig.TrustedSubnet
+	}
+
+	if result == "" {
+		return nil
+	}
+
+	_, ipNet, err := net.ParseCIDR(result)
+	if err != nil {
+		logger.Log.WithError(err).Error("Could not parse trusted subnet")
+		return nil
+	}
+
+	return ipNet
 }
 
 func getJSONFilePath() string {

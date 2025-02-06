@@ -2,6 +2,7 @@ package app
 
 import (
 	"errors"
+	"net"
 	"net/http"
 	"time"
 
@@ -24,6 +25,19 @@ const (
 	// JWTSecret является секретом для подписи авторизационного JWT.
 	JWTSecret = "hesoyam"
 )
+
+func (a *Application) isTrustedClientIP(r *http.Request) bool {
+	if a.Config.TrustedSubnet == nil {
+		return false
+	}
+
+	ip := net.ParseIP(r.Header.Get("X-Real-IP"))
+	if ip == nil {
+		return false
+	}
+
+	return a.Config.TrustedSubnet.Contains(ip)
+}
 
 func (a *Application) authenticate(r *http.Request, w http.ResponseWriter, force bool) (*uuid.UUID, error) {
 	logger.Log.Infof("Will try to authenticate user")

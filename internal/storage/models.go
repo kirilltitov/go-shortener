@@ -9,3 +9,9 @@ type Item struct {
 
 // Items является списком из объектом сокращенных ссылок.
 type Items []Item
+
+// Stats хранит в себе статистику хранилища
+type Stats struct {
+	Users int `json:"users" db:"users"` // Users является количеством пользователей сокращателя урлов
+	URLs  int `json:"urls"  db:"urls"`  // URLs является количеством сокращенных урлов
+}
