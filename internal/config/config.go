@@ -131,7 +131,7 @@ func getEnableHTTPS(jsonConfig json.Config) string {
 		result = envEnableHTTPS
 	}
 
-	if result == "" && jsonConfig.EnableHTTPS == true {
+	if result == "" && jsonConfig.EnableHTTPS {
 		result = "true"
 	}
 
