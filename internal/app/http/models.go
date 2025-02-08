@@ -1,4 +1,4 @@
-package app
+package http
 
 type request struct {
 	URL string `json:"url"`

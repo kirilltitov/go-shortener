@@ -8,7 +8,7 @@ import (
 	_ "net/http/pprof"
 	"os"
 
-	"github.com/kirilltitov/go-shortener/internal/app"
+	"github.com/kirilltitov/go-shortener/internal/app/http"
 	"github.com/kirilltitov/go-shortener/internal/config"
 	"github.com/kirilltitov/go-shortener/internal/logger"
 	"github.com/kirilltitov/go-shortener/internal/version"
@@ -31,7 +31,7 @@ func main() {
 	cfg := config.New()
 	ctx := context.Background()
 
-	a, err := app.New(ctx, cfg)
+	a, err := http.New(ctx, cfg)
 	if err != nil {
 		panic(err)
 	}
