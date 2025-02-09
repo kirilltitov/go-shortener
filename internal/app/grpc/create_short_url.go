@@ -4,12 +4,10 @@ import (
 	"context"
 	"errors"
 
-	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"github.com/kirilltitov/go-shortener/internal/app/grpc/gen"
-	"github.com/kirilltitov/go-shortener/internal/logger"
 	"github.com/kirilltitov/go-shortener/internal/storage"
 )
 
@@ -17,8 +15,7 @@ func (a *Application) CreateShortURL(
 	ctx context.Context,
 	req *gen.CreateShortURLRequest,
 ) (*gen.CreateShortURLResponse, error) {
-	logger.Log.Info("ctx %+v", ctx)
-	userID, ok := ctx.Value(ctxUserIDKey).(uuid.UUID)
+	userID, ok := getUserID(ctx)
 	if !ok {
 		return nil, ErrUnauthorized
 	}

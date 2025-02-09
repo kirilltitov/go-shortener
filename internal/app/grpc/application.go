@@ -1,19 +1,18 @@
 package grpc
 
 import (
+	"context"
 	"errors"
 	"net"
 
+	"github.com/google/uuid"
 	"google.golang.org/grpc"
 
+	"github.com/kirilltitov/go-shortener/internal/app"
 	"github.com/kirilltitov/go-shortener/internal/app/grpc/gen"
 	"github.com/kirilltitov/go-shortener/internal/app/grpc/interceptors"
 	"github.com/kirilltitov/go-shortener/internal/logger"
 	"github.com/kirilltitov/go-shortener/internal/shortener"
-)
-
-const (
-	ctxUserIDKey = "userID"
 )
 
 type Application struct {
@@ -55,4 +54,9 @@ func (a *Application) Run() {
 			panic(err2)
 		}
 	}
+}
+
+func getUserID(ctx context.Context) (uuid.UUID, bool) {
+	userID, ok := ctx.Value(app.CtxUserIDKey{}).(uuid.UUID)
+	return userID, ok
 }

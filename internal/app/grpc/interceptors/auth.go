@@ -7,15 +7,13 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 
+	"github.com/kirilltitov/go-shortener/internal/app"
 	"github.com/kirilltitov/go-shortener/internal/app/auth"
 	"github.com/kirilltitov/go-shortener/internal/app/grpc/gen"
 	"github.com/kirilltitov/go-shortener/internal/logger"
 )
 
-const (
-	ctxTokenKey  = "token"
-	ctxUserIDKey = "userID"
-)
+const mdTokenKey = "token"
 
 var strictAuthMethods = map[string]struct{}{
 	gen.Shortener_GetUserURLs_FullMethodName:    {},
@@ -32,7 +30,7 @@ func authenticate(ctx context.Context, info *grpc.UnaryServerInfo) context.Conte
 		return ctx
 	}
 
-	values := md.Get(ctxTokenKey)
+	values := md.Get(mdTokenKey)
 	var tokenString string
 	if len(values) == 0 {
 		tokenString = ""
@@ -53,11 +51,14 @@ func authenticate(ctx context.Context, info *grpc.UnaryServerInfo) context.Conte
 		}
 
 		newToken, err := auth.IssueNewToken(userID)
-		if err = grpc.SendHeader(ctx, metadata.New(map[string]string{ctxTokenKey: *newToken})); err != nil {
+		if err != nil {
+			return ctx
+		}
+		if err = grpc.SendHeader(ctx, metadata.New(map[string]string{mdTokenKey: *newToken})); err != nil {
 			logger.Log.WithError(err).Error("Could not set token")
 			return ctx
 		}
-		ctx = context.WithValue(ctx, ctxUserIDKey, userID)
+		ctx = context.WithValue(ctx, app.CtxUserIDKey{}, userID)
 		return ctx
 	}
 
@@ -83,7 +84,7 @@ func authenticate(ctx context.Context, info *grpc.UnaryServerInfo) context.Conte
 		return ctx
 	}
 
-	ctx = context.WithValue(ctx, ctxUserIDKey, userID)
+	ctx = context.WithValue(ctx, app.CtxUserIDKey{}, userID)
 	logger.Log.Infof("Authenticated user %s by JWT", userID.String())
 
 	return ctx

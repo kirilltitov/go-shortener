@@ -3,8 +3,6 @@ package grpc
 import (
 	"context"
 
-	"github.com/google/uuid"
-
 	"github.com/kirilltitov/go-shortener/internal/app/grpc/gen"
 	"github.com/kirilltitov/go-shortener/internal/logger"
 )
@@ -13,7 +11,7 @@ func (a *Application) DeleteUserURLs(
 	ctx context.Context,
 	req *gen.DeleteUserURLsRequest,
 ) (*gen.DeleteUserURLsResponse, error) {
-	userID, ok := ctx.Value(ctxUserIDKey).(uuid.UUID)
+	userID, ok := getUserID(ctx)
 	if !ok {
 		return nil, ErrUnauthorized
 	}

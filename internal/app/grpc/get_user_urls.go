@@ -3,7 +3,6 @@ package grpc
 import (
 	"context"
 
-	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -15,7 +14,7 @@ func (a *Application) GetUserURLs(
 	ctx context.Context,
 	req *gen.GetUserURLsRequest,
 ) (*gen.GetUserURLsResponse, error) {
-	userID, ok := ctx.Value(ctxUserIDKey).(uuid.UUID)
+	userID, ok := getUserID(ctx)
 	if !ok {
 		return nil, ErrUnauthorized
 	}
