@@ -1,0 +1,70 @@
+syntax = "proto3";
+
+package shortener;
+
+option go_package = "internal/app/grpc/gen";
+
+message CreateShortURLRequest {
+  string original_url = 1;
+}
+message CreateShortURLResponse {
+  string short_url = 1;
+}
+
+message GetURLRequest {
+  string short_url = 1;
+}
+message GetURLResponse {
+  string original_url = 1;
+}
+
+message BatchCreateShortURLRequest {
+  repeated URLRequest batch_url_requests = 1;
+}
+message BatchCreateShortURLResponse {
+  repeated URLResponse batch_url_responses = 1;
+}
+message URLRequest {
+  string correlation_id = 1;
+  string original_url = 2;
+}
+message URLResponse {
+  string correlation_id = 1;
+  string short_url = 2;
+}
+
+message GetUserURLsRequest {}
+message GetUserURLsResponse {
+  repeated URL user_urls = 1;
+}
+message URL {
+  string short_url = 1;
+  string original_url = 2;
+}
+
+message DeleteUserURLsRequest {
+  repeated string urls_to_del = 1;
+}
+message DeleteUserURLsResponse {}
+
+message GetInternalStatsRequest {}
+message GetInternalStatsResponse {
+  Stats stats = 1;
+}
+message Stats {
+  uint32 count_urls = 1;
+  uint32 count_users = 2;
+}
+
+message GetStorageStatusRequest {}
+message GetStorageStatusResponse {}
+
+service Shortener {
+  rpc CreateShortURL(CreateShortURLRequest) returns (CreateShortURLResponse);
+  rpc GetURL(GetURLRequest) returns (GetURLResponse);
+  rpc BatchCreateShortURL(BatchCreateShortURLRequest) returns (BatchCreateShortURLResponse);
+  rpc GetUserURLs(GetUserURLsRequest) returns (GetUserURLsResponse);
+  rpc DeleteUserURLs(DeleteUserURLsRequest) returns (DeleteUserURLsResponse);
+  rpc GetInternalStats(GetInternalStatsRequest) returns (GetInternalStatsResponse);
+  rpc GetStorageStatus(GetStorageStatusRequest) returns (GetStorageStatusResponse);
+}

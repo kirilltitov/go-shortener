@@ -48,7 +48,7 @@ func (a *Application) APIDeleteUserURLs(w http.ResponseWriter, r *http.Request) 
 	go func() {
 		for err := range a.Shortener.DeleteUserURLs(context.Background(), doneCh, *userID, req) {
 			if err != nil {
-				logger.Log.Infof("Something wen wrong during URL deletion: %s", err)
+				logger.Log.Infof("Something went wrong during URL deletion: %s", err)
 			}
 		}
 

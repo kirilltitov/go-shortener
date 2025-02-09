@@ -9,16 +9,16 @@ import (
 
 // Shortener является объектом, инкапсулирующим в себе бизнес-логику сервиса по сокращению ссылок.
 type Shortener struct {
-	config    config.Config
-	container *container.Container
+	Config    config.Config
+	Container *container.Container
 }
 
 // New создает, конфигурирует и возвращает экземпляр объекта сервиса.
 func New(cfg config.Config, cnt *container.Container) Shortener {
-	return Shortener{config: cfg, container: cnt}
+	return Shortener{Config: cfg, Container: cnt}
 }
 
 // FormatShortURL возвращает полный URL для данного сокращенного идентификатора ссылки.
 func (s *Shortener) FormatShortURL(shortURL string) string {
-	return fmt.Sprintf("%s/%s", s.config.BaseURL, shortURL)
+	return fmt.Sprintf("%s/%s", s.Config.BaseURL, shortURL)
 }

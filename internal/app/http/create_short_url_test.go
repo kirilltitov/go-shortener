@@ -9,6 +9,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/kirilltitov/go-shortener/internal/container"
+	"github.com/kirilltitov/go-shortener/internal/shortener"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -16,8 +18,13 @@ import (
 )
 
 func TestHandlerCreateShortURL(t *testing.T) {
-	a, err := New(context.Background(), config.Config{})
+	cfg := config.NewWithoutParsing()
+	cfg.DatabaseDSN = ""
+	cfg.FileStoragePath = ""
+	cnt, err := container.New(context.Background(), cfg)
 	require.NoError(t, err)
+	service := shortener.New(cfg, cnt)
+	a := New(service)
 
 	type want struct {
 		code     int
@@ -33,7 +40,7 @@ func TestHandlerCreateShortURL(t *testing.T) {
 			input: "http://ya.ru",
 			want: want{
 				code:     201,
-				response: fmt.Sprintf("%s/xA", a.Config.BaseURL),
+				response: fmt.Sprintf("%s/xA", a.Shortener.Config.BaseURL),
 			},
 		},
 		{
@@ -41,7 +48,7 @@ func TestHandlerCreateShortURL(t *testing.T) {
 			input: "https://ya.ru",
 			want: want{
 				code:     201,
-				response: fmt.Sprintf("%s/yA", a.Config.BaseURL),
+				response: fmt.Sprintf("%s/yA", a.Shortener.Config.BaseURL),
 			},
 		},
 		{

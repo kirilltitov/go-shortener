@@ -15,7 +15,7 @@ func (s *Shortener) ShortenURL(ctx context.Context, userID uuid.UUID, URL string
 		return "", fmt.Errorf("invalid URL (must start with https:// or http://): %s", URL)
 	}
 
-	shortURL, err := s.container.Storage.Set(ctx, userID, URL)
+	shortURL, err := s.Container.Storage.Set(ctx, userID, URL)
 
 	return s.FormatShortURL(shortURL), err
 }

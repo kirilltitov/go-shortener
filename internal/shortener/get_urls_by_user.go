@@ -10,7 +10,7 @@ import (
 
 // GetURLsByUser возвращает все сокращенные ссылки для переданного пользователя.
 func (s *Shortener) GetURLsByUser(ctx context.Context, userID uuid.UUID) (storage.Items, error) {
-	result, err := s.container.Storage.GetByUser(ctx, userID)
+	result, err := s.Container.Storage.GetByUser(ctx, userID)
 	if err != nil {
 		return nil, err
 	}

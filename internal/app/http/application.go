@@ -1,108 +1,60 @@
 package http
 
 import (
-	"context"
 	"errors"
 	"net/http"
-	"os"
-	"os/signal"
-	"sync"
-	"syscall"
-	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/kirilltitov/go-shortener/internal/config"
-	"github.com/kirilltitov/go-shortener/internal/container"
 	"github.com/kirilltitov/go-shortener/internal/logger"
 	"github.com/kirilltitov/go-shortener/internal/shortener"
-	"github.com/kirilltitov/go-shortener/internal/storage"
 	"github.com/kirilltitov/go-shortener/internal/utils"
 )
 
 // Application является объектом веб-приложения сервиса.
 type Application struct {
-	Config     config.Config
-	Container  *container.Container
-	Shortener  shortener.Shortener
-	HTTPServer *http.Server
+	Shortener shortener.Shortener
+	Server    *http.Server
 }
 
 // New создает и возвращает сконфигурированный объект веб-приложения сервиса.
-func New(ctx context.Context, cfg config.Config) (*Application, error) {
-	cnt, err := container.New(ctx, cfg)
-	if err != nil {
-		return nil, err
-	}
-
+func New(s shortener.Shortener) *Application {
 	a := &Application{
-		Config:     cfg,
-		Container:  cnt,
-		Shortener:  shortener.New(cfg, cnt),
-		HTTPServer: &http.Server{Addr: cfg.ServerAddress},
+		Shortener: s,
+		Server:    &http.Server{Addr: s.Config.ServerAddress},
 	}
 
-	a.HTTPServer.Handler = utils.GzipHandle(a.createRouter())
+	a.Server.Handler = utils.GzipHandle(a.createRouter())
 
-	return a, nil
+	return a
 }
 
-// Run запускает веб-сервер приложения. Может вернуть ошибку при ошибке конфигурации (занятый порт и т. д.).
+// Run запускает веб-сервер приложения.
 func (a *Application) Run() {
-	go func() {
-		var runFunc func() error
+	var runFunc func() error
 
-		if a.Config.EnableHTTPS == "" {
-			runFunc = func() error {
-				logger.Log.Infof("Starting a HTTP server")
-				return a.HTTPServer.ListenAndServe()
-			}
-		} else {
-			runFunc = func() error {
-				logger.Log.Infof("Starting a HTTPS server")
-				return a.HTTPServer.ListenAndServeTLS(
-					"localhost.crt",
-					"localhost.key",
-				)
-			}
+	if a.Shortener.Config.EnableHTTPS == "" {
+		runFunc = func() error {
+			logger.Log.Infof("Starting a HTTP server at %s", a.Shortener.Config.ServerAddress)
+			return a.Server.ListenAndServe()
 		}
-
-		if err := runFunc(); err != nil {
-			if errors.Is(err, http.ErrServerClosed) {
-				logger.Log.Info("HTTP server shutdown")
-			} else {
-				logger.Log.Error(err)
-			}
+	} else {
+		runFunc = func() error {
+			logger.Log.Infof("Starting a HTTPS server at %s", a.Shortener.Config.ServerAddress)
+			return a.Server.ListenAndServeTLS(
+				"localhost.crt",
+				"localhost.key",
+			)
 		}
-	}()
-
-	signalChan := make(chan os.Signal, 1)
-	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
-
-	sig := <-signalChan
-	logger.Log.Infof("Received signal: %v", sig)
-
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
-	defer cancel()
-
-	var wg sync.WaitGroup
-	wg.Add(1)
-
-	go func() {
-		logger.Log.Info("Shutting down HTTP server")
-		if err := a.HTTPServer.Shutdown(shutdownCtx); err != nil {
-			logger.Log.WithError(err).Error("Could not shutdown HTTP server properly")
-		}
-		wg.Done()
-	}()
-
-	if pgsql, ok := a.Container.Storage.(*storage.PgSQL); ok {
-		logger.Log.Info("Closing PgSQL connection")
-		pgsql.C.Close()
 	}
 
-	wg.Wait()
-	logger.Log.Info("Goodbye")
+	if err := runFunc(); err != nil {
+		if errors.Is(err, http.ErrServerClosed) {
+			logger.Log.Info("HTTP server shutdown")
+		} else {
+			panic(err)
+		}
+	}
 }
 
 func (a *Application) createRouter() chi.Router {

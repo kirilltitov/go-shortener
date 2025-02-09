@@ -13,6 +13,7 @@ type Config struct {
 	DatabaseDSN     string `json:"database_dsn"`
 	EnableHTTPS     bool   `json:"enable_https"`
 	TrustedSubnet   string `json:"trusted_subnet"`
+	GrpcAddress     string `json:"grpc_address"`
 }
 
 // Load загружает JSON-файл с конфигурацией и, в случае успеха, возвращает структуру с конфигурацией

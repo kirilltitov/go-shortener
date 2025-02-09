@@ -23,7 +23,7 @@ func (s *Shortener) DeleteUserURLs(ctx context.Context, doneCh chan struct{}, us
 
 			for URL := range inputCh {
 				logger.Log.Infof("About to delete URL '%s' by user %s", URL, userID)
-				err := s.container.Storage.DeleteByUser(ctx, userID, URL)
+				err := s.Container.Storage.DeleteByUser(ctx, userID, URL)
 				if err != nil {
 					logger.Log.Warnf("Could not delete URL '%s' for user '%s': %s", URL, userID, err.Error())
 				}

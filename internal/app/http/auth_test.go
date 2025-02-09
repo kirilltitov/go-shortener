@@ -8,6 +8,9 @@ import (
 
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
+	"github.com/kirilltitov/go-shortener/internal/app/auth"
+	"github.com/kirilltitov/go-shortener/internal/container"
+	"github.com/kirilltitov/go-shortener/internal/shortener"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -15,8 +18,13 @@ import (
 )
 
 func TestApplication_authenticate(t *testing.T) {
-	a, err := New(context.Background(), config.Config{})
+	cfg := config.NewWithoutParsing()
+	cfg.DatabaseDSN = ""
+	cfg.FileStoragePath = ""
+	cnt, err := container.New(context.Background(), cfg)
 	require.NoError(t, err)
+	service := shortener.New(cfg, cnt)
+	a := New(service)
 
 	type want struct {
 		userID        *uuid.UUID
@@ -31,14 +39,14 @@ func TestApplication_authenticate(t *testing.T) {
 	getJWT := func(userID string) *string {
 		token := jwt.NewWithClaims(
 			jwt.SigningMethodHS256,
-			Claims{
+			auth.Claims{
 				RegisteredClaims: jwt.RegisteredClaims{
 					Subject: userID,
 				},
 			},
 		)
 
-		tokenString, _ := token.SignedString([]byte(JWTSecret))
+		tokenString, _ := token.SignedString([]byte(auth.JWTSecret))
 
 		return &tokenString
 	}

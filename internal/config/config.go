@@ -13,6 +13,9 @@ type Config struct {
 	// ServerAddress является адресом (включая порт), на котором поднимется веб-сервер.
 	ServerAddress string
 
+	// GrpcAddress является адресом (включая порт), на котором поднимется gRPC-сервер
+	GrpcAddress string
+
 	// BaseURL является полным адресом (протокол, домен, порт, путь), который будет использоваться при генерации коротких ссылок.
 	BaseURL string
 
@@ -60,6 +63,7 @@ func NewWithoutParsing() Config {
 
 	return Config{
 		ServerAddress:   getServerAddress(jsonConfig),
+		GrpcAddress:     getGrpcServerAddress(jsonConfig),
 		BaseURL:         getBaseURL(jsonConfig),
 		FileStoragePath: getFileStoragePath(jsonConfig),
 		DatabaseDSN:     getDatabaseDSN(jsonConfig),
@@ -78,6 +82,21 @@ func getServerAddress(jsonConfig json.Config) string {
 
 	if result == "" && jsonConfig.ServerAddress != "" {
 		result = jsonConfig.ServerAddress
+	}
+
+	return result
+}
+
+func getGrpcServerAddress(jsonConfig json.Config) string {
+	var result = flagGrpcBind
+
+	envGrpcServerAddress := os.Getenv("GRPC_SERVER")
+	if envGrpcServerAddress != "" {
+		result = envGrpcServerAddress
+	}
+
+	if result == "" && jsonConfig.GrpcAddress != "" {
+		result = jsonConfig.GrpcAddress
 	}
 
 	return result

@@ -10,6 +10,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/kirilltitov/go-shortener/internal/container"
+	"github.com/kirilltitov/go-shortener/internal/shortener"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -73,8 +75,14 @@ func TestApplication_APIHandlerInternalStats(t *testing.T) {
 		},
 	}
 
-	a, err := New(context.Background(), config.Config{})
+	//a, err := New(context.Background(), config.Config{})
+	cfg := config.NewWithoutParsing()
+	cfg.DatabaseDSN = ""
+	cfg.FileStoragePath = ""
+	cnt, err := container.New(context.Background(), cfg)
 	require.NoError(t, err)
+	service := shortener.New(cfg, cnt)
+	a := New(service)
 
 	r := httptest.NewRequest(http.MethodPost, "/", strings.NewReader("https://ya.ru"))
 	w := httptest.NewRecorder()
@@ -82,7 +90,7 @@ func TestApplication_APIHandlerInternalStats(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			a.Config.TrustedSubnet = tt.trustedSubnet
+			a.Shortener.Config.TrustedSubnet = tt.trustedSubnet
 
 			r := httptest.NewRequest(http.MethodGet, "/api/internal/stats", nil)
 			if tt.realIP != "" {

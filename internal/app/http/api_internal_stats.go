@@ -2,9 +2,11 @@ package http
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/kirilltitov/go-shortener/internal/logger"
+	"github.com/kirilltitov/go-shortener/internal/shortener"
 )
 
 // APIHandlerInternalStats является API-методом для получения статистики по пользователям и ссылкам в сервисе.
@@ -14,15 +16,15 @@ func (a *Application) APIHandlerInternalStats(w http.ResponseWriter, r *http.Req
 
 	log := logger.Log
 
-	if !a.isTrustedClientIP(r) {
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-
-	result, err := a.Shortener.GetStats(r.Context())
+	result, err := a.Shortener.GetStats(r.Context(), r.Header.Get("X-Real-IP"))
 
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		if errors.Is(err, shortener.ErrorUnauthorized) {
+			w.WriteHeader(http.StatusUnauthorized)
+		} else {
+			w.WriteHeader(http.StatusBadRequest)
+		}
+
 		log.Info(err.Error())
 		return
 	}

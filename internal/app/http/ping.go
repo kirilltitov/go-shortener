@@ -11,7 +11,7 @@ import (
 func (a *Application) HandlerPing(w http.ResponseWriter, r *http.Request) {
 	code := 200
 
-	switch v := a.Container.Storage.(type) {
+	switch v := a.Shortener.Container.Storage.(type) {
 	case *storage.PgSQL:
 		err := v.C.Ping(r.Context())
 

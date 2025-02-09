@@ -10,6 +10,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/kirilltitov/go-shortener/internal/container"
+	"github.com/kirilltitov/go-shortener/internal/shortener"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -17,11 +19,13 @@ import (
 )
 
 func TestAPIHandlerBatchCreateShortURL(t *testing.T) {
-	cfg := config.New()
+	cfg := config.NewWithoutParsing()
 	cfg.DatabaseDSN = ""
 	cfg.FileStoragePath = ""
-	a, err := New(context.Background(), cfg)
+	cnt, err := container.New(context.Background(), cfg)
 	require.NoError(t, err)
+	service := shortener.New(cfg, cnt)
+	a := New(service)
 
 	type want struct {
 		code     int
@@ -38,8 +42,8 @@ func TestAPIHandlerBatchCreateShortURL(t *testing.T) {
 			want: want{
 				code: 201,
 				response: []batchResponseRow{
-					{CorrelationID: "lul", ShortURL: fmt.Sprintf("%s/xA", a.Config.BaseURL)},
-					{CorrelationID: "kek", ShortURL: fmt.Sprintf("%s/yA", a.Config.BaseURL)},
+					{CorrelationID: "lul", ShortURL: fmt.Sprintf("%s/xA", a.Shortener.Config.BaseURL)},
+					{CorrelationID: "kek", ShortURL: fmt.Sprintf("%s/yA", a.Shortener.Config.BaseURL)},
 				},
 			},
 		},

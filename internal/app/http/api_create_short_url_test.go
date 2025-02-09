@@ -11,6 +11,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/kirilltitov/go-shortener/internal/container"
+	"github.com/kirilltitov/go-shortener/internal/shortener"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -18,8 +20,13 @@ import (
 )
 
 func BenchmarkApplication_APIHandlerGetURL(b *testing.B) {
-	a, err := New(context.Background(), config.Config{})
+	cfg := config.NewWithoutParsing()
+	cfg.DatabaseDSN = ""
+	cfg.FileStoragePath = ""
+	cnt, err := container.New(context.Background(), cfg)
 	require.NoError(b, err)
+	service := shortener.New(cfg, cnt)
+	a := New(service)
 
 	createURLBytes, err := json.Marshal(request{URL: "https://ya.ru"})
 	assert.NoError(b, err)
@@ -51,8 +58,13 @@ func BenchmarkApplication_APIHandlerGetURL(b *testing.B) {
 }
 
 func TestAPIHandlerCreateShortURL(t *testing.T) {
-	a, err := New(context.Background(), config.Config{})
+	cfg := config.New()
+	cfg.DatabaseDSN = ""
+	cfg.FileStoragePath = ""
+	cnt, err := container.New(context.Background(), cfg)
 	require.NoError(t, err)
+	service := shortener.New(cfg, cnt)
+	a := New(service)
 
 	type want struct {
 		code     int
@@ -68,7 +80,7 @@ func TestAPIHandlerCreateShortURL(t *testing.T) {
 			input: request{URL: "http://ya.ru"},
 			want: want{
 				code:     201,
-				response: &response{Result: fmt.Sprintf("%s/xA", a.Config.BaseURL)},
+				response: &response{Result: fmt.Sprintf("%s/xA", a.Shortener.Config.BaseURL)},
 			},
 		},
 		{
@@ -76,7 +88,7 @@ func TestAPIHandlerCreateShortURL(t *testing.T) {
 			input: request{URL: "https://ya.ru"},
 			want: want{
 				code:     201,
-				response: &response{Result: fmt.Sprintf("%s/yA", a.Config.BaseURL)},
+				response: &response{Result: fmt.Sprintf("%s/yA", a.Shortener.Config.BaseURL)},
 			},
 		},
 		{
