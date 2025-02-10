@@ -14,7 +14,7 @@ import (
 	"github.com/kirilltitov/go-shortener/internal/app"
 	"github.com/kirilltitov/go-shortener/internal/app/auth"
 	"github.com/kirilltitov/go-shortener/internal/app/grpc/gen"
-	"github.com/kirilltitov/go-shortener/internal/app/grpc/test_helpers"
+	"github.com/kirilltitov/go-shortener/internal/app/grpc/testhelpers"
 )
 
 func Test_authenticate(t *testing.T) {
@@ -64,7 +64,7 @@ func Test_authenticate(t *testing.T) {
 		{
 			name: "No token, don't create new",
 			args: args{
-				ctx:  test_helpers.NewContextWithValue("token", ""),
+				ctx:  testhelpers.NewContextWithValue("token", ""),
 				info: emptyInfo,
 			},
 			want: want{
@@ -75,7 +75,7 @@ func Test_authenticate(t *testing.T) {
 		{
 			name: "No token, create new",
 			args: args{
-				ctx: test_helpers.NewContextWithValue("", ""),
+				ctx: testhelpers.NewContextWithValue("", ""),
 				info: &grpc.UnaryServerInfo{
 					FullMethod: gen.Shortener_GetURL_FullMethodName,
 				},
@@ -87,7 +87,7 @@ func Test_authenticate(t *testing.T) {
 		{
 			name: "No token, strict method, don't create new",
 			args: args{
-				ctx: test_helpers.NewContextWithValue("", ""),
+				ctx: testhelpers.NewContextWithValue("", ""),
 				info: &grpc.UnaryServerInfo{
 					FullMethod: gen.Shortener_GetUserURLs_FullMethodName,
 				},
@@ -100,7 +100,7 @@ func Test_authenticate(t *testing.T) {
 		{
 			name: "Invalid token",
 			args: args{
-				ctx:  test_helpers.NewContextWithValue("token", "I.AM.INVALID"),
+				ctx:  testhelpers.NewContextWithValue("token", "I.AM.INVALID"),
 				info: emptyInfo,
 			},
 			want: want{
@@ -111,7 +111,7 @@ func Test_authenticate(t *testing.T) {
 		{
 			name: "Valid token",
 			args: args{
-				ctx:  test_helpers.NewContextWithValue("token", getJWT(userID.String())),
+				ctx:  testhelpers.NewContextWithValue("token", getJWT(userID.String())),
 				info: emptyInfo,
 			},
 			want: want{
