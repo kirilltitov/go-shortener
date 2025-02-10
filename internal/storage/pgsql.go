@@ -163,6 +163,12 @@ func (p PgSQL) DeleteByUser(ctx context.Context, userID uuid.UUID, shortURL stri
 	return nil
 }
 
+// Close закрывает соединение с хранилищем.
+func (p PgSQL) Close() {
+	logger.Log.Info("Closing PgSQL connection")
+	p.C.Close()
+}
+
 // MigrateUp выполняет миграции в хранилище.
 func (p PgSQL) MigrateUp(ctx context.Context) error {
 	if _, err := p.C.Exec(ctx, `

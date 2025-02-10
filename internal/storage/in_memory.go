@@ -94,3 +94,8 @@ func (s InMemory) DeleteByUser(ctx context.Context, userID uuid.UUID, shortURL s
 
 	return nil
 }
+
+// Close закрывает соединение с хранилищем.
+func (s InMemory) Close() {
+	// noop
+}
