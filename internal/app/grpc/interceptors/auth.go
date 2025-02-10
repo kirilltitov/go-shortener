@@ -54,7 +54,7 @@ func authenticate(ctx context.Context, info *grpc.UnaryServerInfo) context.Conte
 		if err != nil {
 			return ctx
 		}
-		if err = grpc.SendHeader(ctx, metadata.New(map[string]string{mdTokenKey: *newToken})); err != nil {
+		if err = grpc.SetHeader(ctx, metadata.New(map[string]string{mdTokenKey: *newToken})); err != nil {
 			logger.Log.WithError(err).Error("Could not set token")
 			return ctx
 		}
