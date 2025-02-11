@@ -5,34 +5,18 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 
 	"github.com/kirilltitov/go-shortener/internal/app"
-	"github.com/kirilltitov/go-shortener/internal/app/auth"
 	"github.com/kirilltitov/go-shortener/internal/app/grpc/gen"
 	"github.com/kirilltitov/go-shortener/internal/app/grpc/testhelpers"
 )
 
 func Test_authenticate(t *testing.T) {
-	userID, _ := uuid.Parse("0f227b5e-81a6-11ee-b962-0242ac120abd")
-	getJWT := func(userID string) string {
-		token := jwt.NewWithClaims(
-			jwt.SigningMethodHS256,
-			auth.Claims{
-				RegisteredClaims: jwt.RegisteredClaims{
-					Subject: userID,
-				},
-			},
-		)
-
-		tokenString, _ := token.SignedString([]byte(auth.JWTSecret))
-
-		return tokenString
-	}
+	authenticatedContext, userID := testhelpers.GetValidUserAndToken()
 
 	emptyInfo := &grpc.UnaryServerInfo{}
 
@@ -111,7 +95,7 @@ func Test_authenticate(t *testing.T) {
 		{
 			name: "Valid token",
 			args: args{
-				ctx:  testhelpers.NewContextWithValue("token", getJWT(userID.String())),
+				ctx:  authenticatedContext,
 				info: emptyInfo,
 			},
 			want: want{

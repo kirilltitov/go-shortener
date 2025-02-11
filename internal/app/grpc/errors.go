@@ -10,3 +10,9 @@ var ErrUnauthorized = status.Error(codes.Unauthenticated, "unauthorized")
 
 // ErrInternal является внутренней ошибкой выполнения gRPC-запроса.
 var ErrInternal = status.Error(codes.Internal, "internal error")
+
+// ErrGone является ошибкой перехода по удаленной короткой ссылке.
+var ErrGone = status.Error(codes.NotFound, "short url gone")
+
+// ErrBadRequest является ошибкой некорректного запроса.
+var ErrBadRequest = status.Error(codes.InvalidArgument, "bad request")

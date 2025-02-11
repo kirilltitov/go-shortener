@@ -35,7 +35,7 @@ func (a *Application) BatchCreateShortURL(
 	log.Infof("Inserted items %+v", result)
 
 	response := gen.BatchCreateShortURLResponse{
-		BatchUrlResponses: make([]*gen.URLResponse, len(result)),
+		BatchUrlResponses: make([]*gen.URLResponse, 0),
 	}
 	for _, item := range result {
 		response.BatchUrlResponses = append(response.BatchUrlResponses, &gen.URLResponse{

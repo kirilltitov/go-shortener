@@ -29,7 +29,7 @@ func (a *Application) GetUserURLs(
 		return nil, status.Error(codes.NotFound, "no urls")
 	}
 
-	result := &gen.GetUserURLsResponse{UserUrls: make([]*gen.URL, len(items))}
+	result := &gen.GetUserURLsResponse{UserUrls: make([]*gen.URL, 0)}
 	for _, item := range items {
 		result.UserUrls = append(
 			result.UserUrls,
