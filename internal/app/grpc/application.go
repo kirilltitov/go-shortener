@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net"
+	"sync"
 
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
@@ -20,12 +21,15 @@ type Application struct {
 
 	Shortener shortener.Shortener
 	Server    *grpc.Server
+
+	wg *sync.WaitGroup
 }
 
 // New создает и возвращает сконфигурированный объект gRPC-приложения сервиса.
-func New(s shortener.Shortener) *Application {
+func New(s shortener.Shortener, wg *sync.WaitGroup) *Application {
 	a := &Application{
 		Shortener: s,
+		wg:        wg,
 	}
 
 	return a
@@ -33,6 +37,8 @@ func New(s shortener.Shortener) *Application {
 
 // Run запускает gRPC-сервер приложения.
 func (a *Application) Run() {
+	defer a.wg.Done()
+
 	logger.Log.Infof("Starting a gRPC server at %s", a.Shortener.Config.GrpcAddress)
 
 	listen, err := net.Listen("tcp", a.Shortener.Config.GrpcAddress)

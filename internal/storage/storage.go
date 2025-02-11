@@ -26,4 +26,7 @@ type Storage interface {
 
 	// GetStats возвращает статистику хранилища.
 	GetStats(ctx context.Context) (*Stats, error)
+
+	// Close закрывает соединение с хранилищем.
+	Close()
 }

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/go-chi/chi/v5"
@@ -52,7 +53,7 @@ func TestHandlerGetShortURL(t *testing.T) {
 	cnt, err := container.New(context.Background(), cfg)
 	require.NoError(t, err)
 	service := shortener.New(cfg, cnt)
-	a := New(service)
+	a := New(service, &sync.WaitGroup{})
 
 	r := httptest.NewRequest(http.MethodPost, "/", strings.NewReader("https://ya.ru"))
 	w := httptest.NewRecorder()

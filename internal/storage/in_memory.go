@@ -113,3 +113,8 @@ func (s InMemory) GetStats(ctx context.Context) (*Stats, error) {
 
 	return &stats, nil
 }
+
+// Close закрывает соединение с хранилищем.
+func (s InMemory) Close() {
+	// noop
+}

@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"sync"
 	"testing"
 
 	"github.com/kirilltitov/go-shortener/internal/container"
@@ -25,7 +26,7 @@ func TestAPIHandlerBatchCreateShortURL(t *testing.T) {
 	cnt, err := container.New(context.Background(), cfg)
 	require.NoError(t, err)
 	service := shortener.New(cfg, cnt)
-	a := New(service)
+	a := New(service, &sync.WaitGroup{})
 
 	type want struct {
 		code     int

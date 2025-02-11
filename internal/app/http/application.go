@@ -3,6 +3,7 @@ package http
 import (
 	"errors"
 	"net/http"
+	"sync"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -15,13 +16,16 @@ import (
 type Application struct {
 	Shortener shortener.Shortener
 	Server    *http.Server
+
+	wg *sync.WaitGroup
 }
 
 // New создает и возвращает сконфигурированный объект веб-приложения сервиса.
-func New(s shortener.Shortener) *Application {
+func New(s shortener.Shortener, wg *sync.WaitGroup) *Application {
 	a := &Application{
 		Shortener: s,
 		Server:    &http.Server{Addr: s.Config.ServerAddress},
+		wg:        wg,
 	}
 
 	a.Server.Handler = utils.GzipHandle(a.createRouter())
@@ -31,6 +35,8 @@ func New(s shortener.Shortener) *Application {
 
 // Run запускает веб-сервер приложения.
 func (a *Application) Run() {
+	defer a.wg.Done()
+
 	var runFunc func() error
 
 	if a.Shortener.Config.EnableHTTPS == "" {

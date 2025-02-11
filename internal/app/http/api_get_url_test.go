@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/kirilltitov/go-shortener/internal/container"
@@ -51,7 +52,7 @@ func TestAPIHandlerGetShortURL(t *testing.T) {
 	cnt, err := container.New(context.Background(), cfg)
 	require.NoError(t, err)
 	service := shortener.New(cfg, cnt)
-	a := New(service)
+	a := New(service, &sync.WaitGroup{})
 
 	r := httptest.NewRequest(http.MethodPost, "/", strings.NewReader("https://ya.ru"))
 	w := httptest.NewRecorder()

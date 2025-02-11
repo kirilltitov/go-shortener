@@ -2,6 +2,7 @@ package shortener
 
 import (
 	"context"
+	"sync"
 
 	"github.com/google/uuid"
 
@@ -12,13 +13,22 @@ import (
 // DeleteUserURLs асинхронно удаляет произвольное количество коротких ссылок указанного пользователя.
 // Возвращает канал, который может возвращать ошибки удаления коротких ссылок, либо закроется после успешного удаления
 // всего переданного списка ссылок.
-func (s *Shortener) DeleteUserURLs(ctx context.Context, doneCh chan struct{}, userID uuid.UUID, URLs []string) chan error {
+func (s *Shortener) DeleteUserURLs(
+	ctx context.Context,
+	doneCh chan struct{},
+	userID uuid.UUID,
+	URLs []string,
+	wg *sync.WaitGroup,
+) chan error {
 	inputCh := utils.Generator(doneCh, URLs)
 
 	return utils.FanIn(doneCh, utils.FanOut(10, func() chan error {
 		result := make(chan error)
 
+		wg.Add(1)
 		go func() {
+			defer wg.Done()
+
 			defer close(result)
 
 			for URL := range inputCh {

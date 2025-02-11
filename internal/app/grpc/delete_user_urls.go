@@ -17,8 +17,11 @@ func (a *Application) DeleteUserURLs(
 	}
 
 	doneCh := make(chan struct{})
+	a.wg.Add(1)
 	go func() {
-		for err := range a.Shortener.DeleteUserURLs(context.Background(), doneCh, userID, req.UrlsToDel) {
+		defer a.wg.Done()
+
+		for err := range a.Shortener.DeleteUserURLs(context.Background(), doneCh, userID, req.UrlsToDel, a.wg) {
 			if err != nil {
 				logger.Log.Infof("Something went wrong during URL deletion: %s", err)
 			}

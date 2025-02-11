@@ -18,7 +18,6 @@ import (
 	"github.com/kirilltitov/go-shortener/internal/container"
 	"github.com/kirilltitov/go-shortener/internal/logger"
 	"github.com/kirilltitov/go-shortener/internal/shortener"
-	"github.com/kirilltitov/go-shortener/internal/storage"
 	"github.com/kirilltitov/go-shortener/internal/version"
 )
 
@@ -49,10 +48,14 @@ func main() {
 }
 
 func run(service shortener.Shortener) {
-	httpApplication := httpServer.New(service)
-	grpcApplication := grpcServer.New(service)
+	wg := &sync.WaitGroup{}
 
+	httpApplication := httpServer.New(service, wg)
+	grpcApplication := grpcServer.New(service, wg)
+
+	wg.Add(1)
 	go httpApplication.Run()
+	wg.Add(1)
 	go grpcApplication.Run()
 
 	signalChan := make(chan os.Signal, 1)
@@ -64,10 +67,9 @@ func run(service shortener.Shortener) {
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
 
-	var wg sync.WaitGroup
-	wg.Add(2)
-
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
 		logger.Log.Info("Shutting down HTTP server")
 		if err := httpApplication.Server.Shutdown(shutdownCtx); err != nil {
 			logger.Log.WithError(err).Error("Could not shutdown HTTP server properly")
@@ -75,17 +77,17 @@ func run(service shortener.Shortener) {
 		wg.Done()
 	}()
 
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
 		logger.Log.Info("Shutting down gRPC server")
 		grpcApplication.Server.GracefulStop()
 		wg.Done()
 	}()
 
-	if pgsql, ok := service.Container.Storage.(*storage.PgSQL); ok {
-		logger.Log.Info("Closing PgSQL connection")
-		pgsql.C.Close()
-	}
-
 	wg.Wait()
+
+	service.Container.Storage.Close()
+
 	logger.Log.Info("Goodbye")
 }
