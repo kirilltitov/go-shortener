@@ -2,7 +2,13 @@ package app
 
 import (
 	"context"
+	"errors"
 	"net/http"
+	"os"
+	"os/signal"
+	"sync"
+	"syscall"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -15,9 +21,12 @@ import (
 
 // Application является объектом веб-приложения сервиса.
 type Application struct {
-	Config    config.Config
-	Container *container.Container
-	Shortener shortener.Shortener
+	Config     config.Config
+	Container  *container.Container
+	Shortener  shortener.Shortener
+	HTTPServer *http.Server
+
+	wg *sync.WaitGroup
 }
 
 // New создает и возвращает сконфигурированный объект веб-приложения сервиса.
@@ -27,16 +36,75 @@ func New(ctx context.Context, cfg config.Config) (*Application, error) {
 		return nil, err
 	}
 
-	return &Application{
-		Config:    cfg,
-		Container: cnt,
-		Shortener: shortener.New(cfg, cnt),
-	}, nil
+	a := &Application{
+		Config:     cfg,
+		Container:  cnt,
+		Shortener:  shortener.New(cfg, cnt),
+		HTTPServer: &http.Server{Addr: cfg.ServerAddress},
+		wg:         &sync.WaitGroup{},
+	}
+
+	a.HTTPServer.Handler = utils.GzipHandle(a.createRouter())
+
+	return a, nil
 }
 
 // Run запускает веб-сервер приложения. Может вернуть ошибку при ошибке конфигурации (занятый порт и т. д.).
-func (a *Application) Run() error {
-	return http.ListenAndServe(a.Config.ServerAddress, utils.GzipHandle(a.createRouter()))
+func (a *Application) Run() {
+	a.wg.Add(1)
+	go func() {
+		defer a.wg.Done()
+
+		var runFunc func() error
+
+		if a.Config.EnableHTTPS == "" {
+			runFunc = func() error {
+				logger.Log.Infof("Starting a HTTP server")
+				return a.HTTPServer.ListenAndServe()
+			}
+		} else {
+			runFunc = func() error {
+				logger.Log.Infof("Starting a HTTPS server")
+				return a.HTTPServer.ListenAndServeTLS(
+					"localhost.crt",
+					"localhost.key",
+				)
+			}
+		}
+
+		if err := runFunc(); err != nil {
+			if errors.Is(err, http.ErrServerClosed) {
+				logger.Log.Info("HTTP server shutdown")
+			} else {
+				logger.Log.Error(err)
+			}
+		}
+	}()
+
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+
+	sig := <-signalChan
+	logger.Log.Infof("Received signal: %v", sig)
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+
+	a.wg.Add(1)
+	go func() {
+		defer a.wg.Done()
+
+		logger.Log.Info("Shutting down HTTP server")
+		if err := a.HTTPServer.Shutdown(shutdownCtx); err != nil {
+			logger.Log.WithError(err).Error("Could not shutdown HTTP server properly")
+		}
+	}()
+
+	a.wg.Wait()
+
+	a.Container.Storage.Close()
+
+	logger.Log.Info("Goodbye")
 }
 
 func (a *Application) createRouter() chi.Router {
