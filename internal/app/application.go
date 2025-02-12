@@ -16,7 +16,6 @@ import (
 	"github.com/kirilltitov/go-shortener/internal/container"
 	"github.com/kirilltitov/go-shortener/internal/logger"
 	"github.com/kirilltitov/go-shortener/internal/shortener"
-	"github.com/kirilltitov/go-shortener/internal/storage"
 	"github.com/kirilltitov/go-shortener/internal/utils"
 )
 
@@ -26,6 +25,8 @@ type Application struct {
 	Container  *container.Container
 	Shortener  shortener.Shortener
 	HTTPServer *http.Server
+
+	wg *sync.WaitGroup
 }
 
 // New создает и возвращает сконфигурированный объект веб-приложения сервиса.
@@ -40,6 +41,7 @@ func New(ctx context.Context, cfg config.Config) (*Application, error) {
 		Container:  cnt,
 		Shortener:  shortener.New(cfg, cnt),
 		HTTPServer: &http.Server{Addr: cfg.ServerAddress},
+		wg:         &sync.WaitGroup{},
 	}
 
 	a.HTTPServer.Handler = utils.GzipHandle(a.createRouter())
@@ -49,7 +51,10 @@ func New(ctx context.Context, cfg config.Config) (*Application, error) {
 
 // Run запускает веб-сервер приложения. Может вернуть ошибку при ошибке конфигурации (занятый порт и т. д.).
 func (a *Application) Run() {
+	a.wg.Add(1)
 	go func() {
+		defer a.wg.Done()
+
 		var runFunc func() error
 
 		if a.Config.EnableHTTPS == "" {
@@ -85,23 +90,20 @@ func (a *Application) Run() {
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
 
-	var wg sync.WaitGroup
-	wg.Add(1)
-
+	a.wg.Add(1)
 	go func() {
+		defer a.wg.Done()
+
 		logger.Log.Info("Shutting down HTTP server")
 		if err := a.HTTPServer.Shutdown(shutdownCtx); err != nil {
 			logger.Log.WithError(err).Error("Could not shutdown HTTP server properly")
 		}
-		wg.Done()
 	}()
 
-	if pgsql, ok := a.Container.Storage.(*storage.PgSQL); ok {
-		logger.Log.Info("Closing PgSQL connection")
-		pgsql.C.Close()
-	}
+	a.wg.Wait()
 
-	wg.Wait()
+	a.Container.Storage.Close()
+
 	logger.Log.Info("Goodbye")
 }
 

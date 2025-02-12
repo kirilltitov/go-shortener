@@ -174,6 +174,12 @@ func (p PgSQL) GetStats(ctx context.Context) (*Stats, error) {
 	return &stats, nil
 }
 
+// Close закрывает соединение с хранилищем.
+func (p PgSQL) Close() {
+	logger.Log.Info("Closing PgSQL connection")
+	p.C.Close()
+}
+
 // MigrateUp выполняет миграции в хранилище.
 func (p PgSQL) MigrateUp(ctx context.Context) error {
 	if _, err := p.C.Exec(ctx, `
