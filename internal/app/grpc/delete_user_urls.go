@@ -27,7 +27,7 @@ func (a *Application) DeleteUserURLs(
 			}
 		}
 
-		defer close(doneCh)
+		close(doneCh)
 	}()
 
 	return &gen.DeleteUserURLsResponse{}, nil

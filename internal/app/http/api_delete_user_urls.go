@@ -55,7 +55,7 @@ func (a *Application) APIDeleteUserURLs(w http.ResponseWriter, r *http.Request) 
 			}
 		}
 
-		defer close(doneCh)
+		close(doneCh)
 	}()
 
 	w.WriteHeader(http.StatusAccepted)

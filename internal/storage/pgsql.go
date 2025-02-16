@@ -174,6 +174,11 @@ func (p PgSQL) GetStats(ctx context.Context) (*Stats, error) {
 	return &stats, nil
 }
 
+// Status возвращает ошибку, если хранилище не в порядке.
+func (p PgSQL) Status(ctx context.Context) error {
+	return p.C.Ping(ctx)
+}
+
 // Close закрывает соединение с хранилищем.
 func (p PgSQL) Close() {
 	logger.Log.Info("Closing PgSQL connection")

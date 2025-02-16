@@ -3,6 +3,7 @@ package storage
 import (
 	"context"
 	"strconv"
+	"sync"
 
 	"github.com/google/uuid"
 )
@@ -17,6 +18,7 @@ type inMemoryRow struct {
 type InMemory struct {
 	storage map[string]inMemoryRow
 	cur     *int
+	mx      sync.Mutex
 }
 
 // NewInMemoryStorage создает и возвращает экземпляр хранилища в памяти.
@@ -28,7 +30,10 @@ func NewInMemoryStorage(ctx context.Context) *InMemory {
 }
 
 // Get загружает из хранилища информацию о сокращенной ссылке.
-func (s InMemory) Get(ctx context.Context, shortURL string) (string, error) {
+func (s *InMemory) Get(ctx context.Context, shortURL string) (string, error) {
+	s.mx.Lock()
+	defer s.mx.Unlock()
+
 	var _err error = nil
 	val, ok := s.storage[shortURL]
 	if !ok {
@@ -39,7 +44,10 @@ func (s InMemory) Get(ctx context.Context, shortURL string) (string, error) {
 }
 
 // Set записывает в хранилище информацию о сокращенной ссылке.
-func (s InMemory) Set(ctx context.Context, userID uuid.UUID, URL string) (string, error) {
+func (s *InMemory) Set(ctx context.Context, userID uuid.UUID, URL string) (string, error) {
+	s.mx.Lock()
+	defer s.mx.Unlock()
+
 	*s.cur++
 	shortURL := intToShortURL(*s.cur)
 	s.storage[shortURL] = inMemoryRow{
@@ -52,7 +60,7 @@ func (s InMemory) Set(ctx context.Context, userID uuid.UUID, URL string) (string
 }
 
 // MultiSet записывает в хранилище информацию о нескольких сокращенных ссылках.
-func (s InMemory) MultiSet(ctx context.Context, userID uuid.UUID, items Items) (Items, error) {
+func (s *InMemory) MultiSet(ctx context.Context, userID uuid.UUID, items Items) (Items, error) {
 	var result Items
 
 	for _, item := range items {
@@ -70,7 +78,10 @@ func (s InMemory) MultiSet(ctx context.Context, userID uuid.UUID, items Items) (
 }
 
 // GetByUser загружает из хранилища все сокращенные ссылки пользователя.
-func (s InMemory) GetByUser(ctx context.Context, userID uuid.UUID) (Items, error) {
+func (s *InMemory) GetByUser(ctx context.Context, userID uuid.UUID) (Items, error) {
+	s.mx.Lock()
+	defer s.mx.Unlock()
+
 	var result Items
 
 	for shortURL, item := range s.storage {
@@ -87,7 +98,10 @@ func (s InMemory) GetByUser(ctx context.Context, userID uuid.UUID) (Items, error
 }
 
 // DeleteByUser удаляет из хранилища все сокращенные ссылки пользователя.
-func (s InMemory) DeleteByUser(ctx context.Context, userID uuid.UUID, shortURL string) error {
+func (s *InMemory) DeleteByUser(ctx context.Context, userID uuid.UUID, shortURL string) error {
+	s.mx.Lock()
+	defer s.mx.Unlock()
+
 	if val, ok := s.storage[shortURL]; ok && val.userID == userID {
 		delete(s.storage, shortURL)
 	}
@@ -96,7 +110,10 @@ func (s InMemory) DeleteByUser(ctx context.Context, userID uuid.UUID, shortURL s
 }
 
 // GetStats возвращает статистику хранилища.
-func (s InMemory) GetStats(ctx context.Context) (*Stats, error) {
+func (s *InMemory) GetStats(ctx context.Context) (*Stats, error) {
+	s.mx.Lock()
+	defer s.mx.Unlock()
+
 	stats := Stats{
 		Users: 0,
 		URLs:  0,
@@ -114,7 +131,12 @@ func (s InMemory) GetStats(ctx context.Context) (*Stats, error) {
 	return &stats, nil
 }
 
+// Status возвращает ошибку, если хранилище не в порядке.
+func (s *InMemory) Status(ctx context.Context) error {
+	return nil
+}
+
 // Close закрывает соединение с хранилищем.
-func (s InMemory) Close() {
+func (s *InMemory) Close() {
 	// noop
 }

@@ -66,19 +66,21 @@ func (a *Application) Run() {
 func (a *Application) createRouter() chi.Router {
 	router := chi.NewRouter()
 
+	router.Use(logger.WithLogging, utils.GzipHandle)
+
 	router.Mount("/debug", middleware.Profiler())
 
-	router.Post("/", logger.WithLogging(a.HandlerCreateShortURL))
-	router.Get("/{short}", logger.WithLogging(a.HandlerGetURL))
-	router.Get("/ping", logger.WithLogging(a.HandlerPing))
+	router.Post("/", a.HandlerCreateShortURL)
+	router.Get("/{short}", a.HandlerGetURL)
+	router.Get("/ping", a.HandlerPing)
 
-	router.Post("/api/get", logger.WithLogging(a.APIHandlerGetURL))
-	router.Get("/api/user/urls", logger.WithLogging(a.APIUserURLs))
-	router.Delete("/api/user/urls", logger.WithLogging(a.APIDeleteUserURLs))
-	router.Post("/api/shorten", logger.WithLogging(a.APIHandlerCreateShortURL))
-	router.Post("/api/shorten/batch", logger.WithLogging(a.APIHandlerBatchCreateShortURL))
+	router.Post("/api/get", a.APIHandlerGetURL)
+	router.Get("/api/user/urls", a.APIUserURLs)
+	router.Delete("/api/user/urls", a.APIDeleteUserURLs)
+	router.Post("/api/shorten", a.APIHandlerCreateShortURL)
+	router.Post("/api/shorten/batch", a.APIHandlerBatchCreateShortURL)
 
-	router.Get("/api/internal/stats", logger.WithLogging(a.APIHandlerInternalStats))
+	router.Get("/api/internal/stats", a.APIHandlerInternalStats)
 
 	return router
 }

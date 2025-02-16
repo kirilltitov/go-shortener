@@ -74,7 +74,6 @@ func run(service shortener.Shortener) {
 		if err := httpApplication.Server.Shutdown(shutdownCtx); err != nil {
 			logger.Log.WithError(err).Error("Could not shutdown HTTP server properly")
 		}
-		wg.Done()
 	}()
 
 	wg.Add(1)
@@ -82,7 +81,6 @@ func run(service shortener.Shortener) {
 		defer wg.Done()
 		logger.Log.Info("Shutting down gRPC server")
 		grpcApplication.Server.GracefulStop()
-		wg.Done()
 	}()
 
 	wg.Wait()
