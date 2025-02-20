@@ -1,28 +1,20 @@
-package app
+package http
 
 import (
 	"errors"
 	"net/http"
 	"time"
 
-	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
+	"github.com/kirilltitov/go-shortener/internal/app/auth"
 
 	"github.com/kirilltitov/go-shortener/internal/logger"
 )
-
-// Claims является объектом для декодинга переданного JWT.
-type Claims struct {
-	jwt.RegisteredClaims
-}
 
 // Конфигурация JWT.
 const (
 	// JWTCookieName является ключом для названия куки, в которой будет храниться авторизационный JWT.
 	JWTCookieName = "access_token"
-
-	// JWTSecret является секретом для подписи авторизационного JWT.
-	JWTSecret = "hesoyam"
 )
 
 func (a *Application) authenticate(r *http.Request, w http.ResponseWriter, force bool) (*uuid.UUID, error) {
@@ -41,7 +33,7 @@ func (a *Application) authenticate(r *http.Request, w http.ResponseWriter, force
 				return nil, err2
 			}
 
-			newCookie, err2 := newCookie(userID)
+			newCookie, err2 := a.newCookie(userID)
 			if err2 != nil {
 				return nil, err2
 			}
@@ -56,25 +48,21 @@ func (a *Application) authenticate(r *http.Request, w http.ResponseWriter, force
 		}
 	}
 
-	tokenString := cookie.Value
-	claims := &Claims{}
-
-	token, err := jwt.ParseWithClaims(tokenString, claims, func(t *jwt.Token) (interface{}, error) {
-		return []byte(JWTSecret), nil
-	})
+	claims := &auth.Claims{}
+	token, err := auth.ParseTokenString(cookie.Value, claims)
 
 	if err != nil || !token.Valid {
 		if force {
 			return nil, nil
 		}
-		logger.Log.Infof("Could not parse auth cookie or JWT not valid, will issue new")
+		logger.Log.WithError(err).Info("Could not parse auth cookie or JWT not valid, will issue new")
 
 		userID, err2 := uuid.NewV6()
 		if err2 != nil {
 			return nil, err2
 		}
 
-		cookie, err2 := newCookie(userID)
+		cookie, err2 := a.newCookie(userID)
 		if err2 != nil {
 			return nil, err2
 		}
@@ -99,26 +87,15 @@ func (a *Application) authenticate(r *http.Request, w http.ResponseWriter, force
 	return &userID, nil
 }
 
-func newCookie(userID uuid.UUID) (*http.Cookie, error) {
-	token := jwt.NewWithClaims(
-		jwt.SigningMethodHS256,
-		Claims{
-			RegisteredClaims: jwt.RegisteredClaims{
-				Subject: userID.String(),
-			},
-		},
-	)
-
-	tokenString, err := token.SignedString([]byte(JWTSecret))
+func (a *Application) newCookie(userID uuid.UUID) (*http.Cookie, error) {
+	tokenString, err := auth.IssueNewToken(userID)
 	if err != nil {
 		return nil, err
 	}
 
-	cookie := http.Cookie{
+	return &http.Cookie{
 		Name:    JWTCookieName,
-		Value:   tokenString,
+		Value:   *tokenString,
 		Expires: time.Now().AddDate(1, 0, 0),
-	}
-
-	return &cookie, nil
+	}, nil
 }

@@ -1,26 +1,17 @@
-package app
+package http
 
 import (
 	"net/http"
 
 	"github.com/kirilltitov/go-shortener/internal/logger"
-	"github.com/kirilltitov/go-shortener/internal/storage"
 )
 
 // HandlerPing является методом, возвращающим текущее здоровье сервиса.
 func (a *Application) HandlerPing(w http.ResponseWriter, r *http.Request) {
 	code := 200
 
-	switch v := a.Container.Storage.(type) {
-	case *storage.PgSQL:
-		err := v.C.Ping(r.Context())
-
-		if err != nil {
-			logger.Log.Errorf("Could not ping PgSQL: %v\n", err)
-			code = 500
-		}
-	default:
-		logger.Log.Info("Storage is not PgSQL")
+	if err := a.Shortener.Container.Storage.Status(r.Context()); err != nil {
+		logger.Log.Errorf("Could not ping storage: %v\n", err)
 		code = 500
 	}
 

@@ -24,7 +24,7 @@ func TestWithLogging(t *testing.T) {
 	r := httptest.NewRequest(http.MethodGet, "/abc", nil)
 	w := httptest.NewRecorder()
 
-	WithLogging(testHandler)(w, r)
+	WithLogging(http.HandlerFunc(testHandler)).ServeHTTP(w, r)
 
 	ja.Assertf(
 		buf.String(),

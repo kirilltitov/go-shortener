@@ -1,6 +1,7 @@
 package config
 
 import (
+	"net"
 	"os"
 
 	"github.com/kirilltitov/go-shortener/internal/config/json"
@@ -11,6 +12,9 @@ import (
 type Config struct {
 	// ServerAddress является адресом (включая порт), на котором поднимется веб-сервер.
 	ServerAddress string
+
+	// GrpcAddress является адресом (включая порт), на котором поднимется gRPC-сервер
+	GrpcAddress string
 
 	// BaseURL является полным адресом (протокол, домен, порт, путь), который будет использоваться при генерации коротких ссылок.
 	BaseURL string
@@ -27,6 +31,9 @@ type Config struct {
 
 	// EnableHTTPS заставляет сервер запускаться в режиме HTTPS
 	EnableHTTPS string
+
+	// TrustedSubnet является доверенной подсетью, запросы из которой разрешены для внутренних методов
+	TrustedSubnet *net.IPNet
 }
 
 // New создает, автоматически заполняет и возвращает экземпляр конфигурации сервиса.
@@ -56,10 +63,12 @@ func NewWithoutParsing() Config {
 
 	return Config{
 		ServerAddress:   getServerAddress(jsonConfig),
+		GrpcAddress:     getGrpcServerAddress(jsonConfig),
 		BaseURL:         getBaseURL(jsonConfig),
 		FileStoragePath: getFileStoragePath(jsonConfig),
 		DatabaseDSN:     getDatabaseDSN(jsonConfig),
 		EnableHTTPS:     getEnableHTTPS(jsonConfig),
+		TrustedSubnet:   getTrustedSubnet(jsonConfig),
 	}
 }
 
@@ -73,6 +82,21 @@ func getServerAddress(jsonConfig json.Config) string {
 
 	if result == "" && jsonConfig.ServerAddress != "" {
 		result = jsonConfig.ServerAddress
+	}
+
+	return result
+}
+
+func getGrpcServerAddress(jsonConfig json.Config) string {
+	var result = flagGrpcBind
+
+	envGrpcServerAddress := os.Getenv("GRPC_SERVER")
+	if envGrpcServerAddress != "" {
+		result = envGrpcServerAddress
+	}
+
+	if result == "" && jsonConfig.GrpcAddress != "" {
+		result = jsonConfig.GrpcAddress
 	}
 
 	return result
@@ -136,6 +160,31 @@ func getEnableHTTPS(jsonConfig json.Config) string {
 	}
 
 	return result
+}
+
+func getTrustedSubnet(jsonConfig json.Config) *net.IPNet {
+	var result = flagTrustedSubnet
+
+	envTrustedSubnet := os.Getenv("TRUSTED_SUBNET")
+	if envTrustedSubnet != "" {
+		result = envTrustedSubnet
+	}
+
+	if result == "" && jsonConfig.TrustedSubnet != "" {
+		result = jsonConfig.TrustedSubnet
+	}
+
+	if result == "" {
+		return nil
+	}
+
+	_, ipNet, err := net.ParseCIDR(result)
+	if err != nil {
+		logger.Log.WithError(err).Error("Could not parse trusted subnet")
+		return nil
+	}
+
+	return ipNet
 }
 
 func getJSONFilePath() string {

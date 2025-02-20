@@ -50,7 +50,7 @@ func ExampleShortener_GetURL() {
 	ctx, shortener := setupExample()
 	userID, _ := uuid.NewV6()
 
-	shortURL, _ := shortener.container.Storage.Set(ctx, userID, "https://ya.ru")
+	shortURL, _ := shortener.Container.Storage.Set(ctx, userID, "https://ya.ru")
 
 	result, err := shortener.GetURL(ctx, shortURL)
 
@@ -95,7 +95,7 @@ func ExampleShortener_GetURLsByUser() {
 	ctx, shortener := setupExample()
 	userID, _ := uuid.NewV6()
 
-	shortener.container.Storage.Set(ctx, userID, "https://ya.ru")
+	shortener.Container.Storage.Set(ctx, userID, "https://ya.ru")
 
 	result, err := shortener.GetURLsByUser(ctx, userID)
 

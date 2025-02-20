@@ -24,6 +24,12 @@ type Storage interface {
 	// DeleteByUser удаляет сокращенную ссылку для данного пользователя.
 	DeleteByUser(ctx context.Context, userID uuid.UUID, shortURL string) error
 
+	// GetStats возвращает статистику хранилища.
+	GetStats(ctx context.Context) (*Stats, error)
+
+	// Status возвращает ошибку, если хранилище не в порядке.
+	Status(ctx context.Context) error
+
 	// Close закрывает соединение с хранилищем.
 	Close()
 }

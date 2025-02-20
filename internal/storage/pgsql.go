@@ -163,6 +163,22 @@ func (p PgSQL) DeleteByUser(ctx context.Context, userID uuid.UUID, shortURL stri
 	return nil
 }
 
+// GetStats возвращает статистику хранилища.
+func (p PgSQL) GetStats(ctx context.Context) (*Stats, error) {
+	var stats Stats
+
+	if err := pgxscan.Get(ctx, p.C, &stats, `select count(distinct user_id) users, count(id) urls from public.url`); err != nil {
+		return nil, err
+	}
+
+	return &stats, nil
+}
+
+// Status возвращает ошибку, если хранилище не в порядке.
+func (p PgSQL) Status(ctx context.Context) error {
+	return p.C.Ping(ctx)
+}
+
 // Close закрывает соединение с хранилищем.
 func (p PgSQL) Close() {
 	logger.Log.Info("Closing PgSQL connection")

@@ -41,8 +41,8 @@ func (r *loggingResponseWriter) WriteHeader(statusCode int) {
 }
 
 // WithLogging осуществляет логирование переданной функции обработки HTTP-запросов.
-func WithLogging(h http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func WithLogging(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 
 		responseData := &responseData{
@@ -64,5 +64,5 @@ func WithLogging(h http.HandlerFunc) http.HandlerFunc {
 			"duration_μs": duration.Microseconds(),
 			"size":        responseData.size,
 		}).Info("Served HTTP request")
-	}
+	})
 }

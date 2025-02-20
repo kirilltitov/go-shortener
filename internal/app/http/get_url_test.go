@@ -1,4 +1,4 @@
-package app
+package http
 
 import (
 	"context"
@@ -6,9 +6,12 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/kirilltitov/go-shortener/internal/container"
+	"github.com/kirilltitov/go-shortener/internal/shortener"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -44,8 +47,13 @@ func TestHandlerGetShortURL(t *testing.T) {
 		},
 	}
 
-	a, err := New(context.Background(), config.Config{})
+	cfg := config.NewWithoutParsing()
+	cfg.DatabaseDSN = ""
+	cfg.FileStoragePath = ""
+	cnt, err := container.New(context.Background(), cfg)
 	require.NoError(t, err)
+	service := shortener.New(cfg, cnt)
+	a := New(service, &sync.WaitGroup{})
 
 	r := httptest.NewRequest(http.MethodPost, "/", strings.NewReader("https://ya.ru"))
 	w := httptest.NewRecorder()
